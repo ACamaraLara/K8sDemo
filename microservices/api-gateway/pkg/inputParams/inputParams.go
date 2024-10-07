@@ -2,11 +2,13 @@ package inputParams
 
 import (
 	"flag"
+
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
 )
 
 type InputParams struct {
 	RESTPort int
-	// Logger   logger.LoggerConfig
+	Logger   logger.LoggerConfig
 	// Rabbit   BlauRabbitMQ.RabbitConfig
 }
 
@@ -17,7 +19,7 @@ func SetInputParams() *InputParams {
 	var inputParams InputParams
 
 	flag.IntVar(&inputParams.RESTPort, "restPort", 8080, "REST server port.")
-	// logger.AddFlagsParams(&inputParams.Logger)
+	logger.AddFlagsParams(&inputParams.Logger)
 	// inputParams.Rabbit.AddFlagsParams()
 
 	flag.Parse()
