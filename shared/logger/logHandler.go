@@ -65,7 +65,7 @@ func InitServiceLogger(cfg LoggerConfig, serviceName string, logOutput *LoggerOu
 	log.Logger = log.Output(writer)
 
 	// Set log level.
-	switch strings.ToLower(cfg.LogLevel) {
+	switch strings.ToLower("info") {
 	case zerolog.LevelInfoValue:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case zerolog.LevelDebugValue:

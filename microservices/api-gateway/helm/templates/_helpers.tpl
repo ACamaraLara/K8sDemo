@@ -60,3 +60,15 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create app container values
+*/}}
+{{- define "container1" -}}
+- name: newContainer
+  image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.version}}"
+  ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+{{- end -}}

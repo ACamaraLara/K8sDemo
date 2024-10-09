@@ -1,15 +1,24 @@
 package logger
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
 )
 
+const lokiPostPath string = "/api/prom/push"
+
 // Returns URL to post in Loki logging service.
-// func getLokiPostUrl() (string, error) {
-// 	lokiBaseUrl := config.GetEnvironWithDefault("LOKI_URL", "http://localhost:3100")
-// 	fmt.Println("Loki URL:", lokiBaseUrl)
-// 	return lokiBaseUrl + "/loki/api/v1/push", nil
-// }
+func getLokiPostUrl() (string, error) {
+	lokiBaseUrl := config.GetEnvironWithDefault("LOKI_URL", "http://loki:3100")
+	fmt.Println("Loki URL:", lokiBaseUrl)
+	return lokiBaseUrl + lokiPostPath, nil
+}
 
 // StartLokiLogPublishRoutine starts routine to send logs coming
 // from ZeroLog to LokiDB.
@@ -19,92 +28,79 @@ import (
 func StartLokiLogPublishRoutine(logWriter *LoggerOutput) error {
 
 	// Declare url and http client to post logs to Loki db.
-	// lokiPostURL, err := getLokiPostUrl()
+	lokiPostURL, err := getLokiPostUrl()
+	if err != nil {
+		return fmt.Errorf("Error obtaining loki post URL " + err.Error())
+	}
+
+	// lokiClient, err := loki.New(lokiPostURL)
 	// if err != nil {
-	// 	return fmt.Errorf("Error obtaining loki post URL " + err.Error())
+	// 	fmt.Errorf("Failed to create Loki client")
 	// }
 
-	// lokiClient := http.DefaultClient
+	lokiClient := http.DefaultClient
 
 	// Infinite loop that listens to a LoqQueue channel for service logs.
 	go func() {
 		for log := range logWriter.LogQueue {
 
 			// // Deserialize byte array in a LogData object.
-			// var logData LogData
-			fmt.Printf("log: %v\n", log)
-			// if err := logData.UnmarshalJSON(log); err != nil {
-			// 	fmt.Println("Error marshaling log entry to JSON:", err)
-			// 	continue
-			// }
+			var logData LogData
 
-			// // Convert logData structure in a byte array with Loki format.
-			// logLoki, err := getLogInLokiFormat(&logData)
-			// if err != nil {
-			// 	fmt.Println("Error getting LokiLog structure. Error: ", err)
-			// }
+			if err := logData.UnmarshalJSON(log); err != nil {
+				fmt.Println("Error marshaling log entry to JSON:", err)
+				continue
+			}
 
-			// req, err := http.NewRequest("POST", lokiPostURL, bytes.NewBuffer(logLoki))
+			// Convert logData structure in a byte array with Loki format.
+			logLoki, err := getLogInLokiFormat(&logData)
+			if err != nil {
+				fmt.Println("Error getting LokiLog structure. Error: ", err)
+			}
 
-			// // Make HTTP request to Loki post URL.
-			// if err != nil {
-			// 	fmt.Println("Error creating Loki POST request. Error: ", err)
-			// 	continue
-			// }
+			req, _ := http.NewRequest("POST", lokiPostURL, bytes.NewBuffer(logLoki))
 
-			// // Establecer el encabezado "Content-Type" en la solicitud
-			// req.Header.Set("Content-Type", "application/json")
+			// Establecer el encabezado "Content-Type" en la solicitud
+			req.Header.Set("Content-Type", "application/json")
 
-			// resp, err := lokiClient.Do(req)
-
-			// if err != nil {
-			// 	fmt.Println("Error sending POST request to Loki server. Error: ", err)
-			// 	continue
-			// }
-
-			// if resp.StatusCode != http.StatusNoContent {
-			// 	fmt.Println("Unexpected status code from loki, status code: ", resp.StatusCode)
-			// }
-
-			// resp.Body.Close()
-
+			lokiClient.Do(req)
 		}
 	}()
 	return nil
 }
 
 // Serialiizes a LogData struct in a []byte.
-// func getLogInLokiFormat(logData *LogData) ([]byte, error) {
+func getLogInLokiFormat(logData *LogData) ([]byte, error) {
 
-// 	// store LogData attributes in Loki specified format.
-// 	logLoki := map[string]interface{}{
-// 		"streams": []map[string]interface{}{
-// 			{
-// 				"stream": func() map[string]interface{} {
-// 					stream := map[string]interface{}{
-// 						"severity": logData.Level,
-// 						"job":      logData.ServiceName,
-// 					}
+	// store LogData attributes in Loki specified format.
+	logLoki := map[string]interface{}{
+		"streams": []map[string]interface{}{
+			{
+				"stream": func() map[string]interface{} {
+					stream := map[string]interface{}{
+						"severity": logData.Level,
+						"job":      logData.ServiceName,
+					}
 
-// 					// Add extra fields as key-value pairs.
-// 					for key, value := range logData.ExtraFields {
-// 						stream[key] = value
-// 					}
+					// Add extra fields as key-value pairs.
+					for key, value := range logData.ExtraFields {
+						stream[key] = value
+					}
 
-// 					return stream
-// 				}(),
-// 				"values": [][]string{
-// 					{strconv.FormatInt(time.Now().UnixNano(), 10), logData.Message},
-// 				},
-// 			},
-// 		},
-// 	}
+					return stream
+				}(),
+				"values": [][]string{
+					{strconv.FormatInt(time.Now().UnixNano(), 10), logData.Message},
+				},
+			},
+		},
+	}
 
-// 	// Serialize new structure in a byte array.
-// 	payload, err := json.Marshal(logLoki)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	// Serialize new structure in a byte array.
+	payload, err := json.Marshal(logLoki)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return payload, nil
-// }
+	return payload, nil
+}
