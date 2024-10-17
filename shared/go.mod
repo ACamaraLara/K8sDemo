@@ -1,4 +1,4 @@
-module github.com/ACamaraLara/K8sBlockChainDemo
+module github.com/ACamaraLara/K8sBlockChainDemo/shared
 
 go 1.22.0
 

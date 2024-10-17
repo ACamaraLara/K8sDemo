@@ -33,11 +33,6 @@ func StartLokiLogPublishRoutine(logWriter *LoggerOutput) error {
 		return fmt.Errorf("Error obtaining loki post URL " + err.Error())
 	}
 
-	// lokiClient, err := loki.New(lokiPostURL)
-	// if err != nil {
-	// 	fmt.Errorf("Failed to create Loki client")
-	// }
-
 	lokiClient := http.DefaultClient
 
 	// Infinite loop that listens to a LoqQueue channel for service logs.
@@ -79,7 +74,6 @@ func getLogInLokiFormat(logData *LogData) ([]byte, error) {
 				"stream": func() map[string]interface{} {
 					stream := map[string]interface{}{
 						"severity": logData.Level,
-						"job":      logData.ServiceName,
 					}
 
 					// Add extra fields as key-value pairs.

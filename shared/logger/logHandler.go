@@ -48,14 +48,14 @@ func AddFlagsParams(cfg *LoggerConfig) {
 // @param logOutput I/O writer to handle multilevel writer.
 // It is used to store the logs and send them to the routine
 // that will publish them in Loki.
-func InitServiceLogger(cfg LoggerConfig, serviceName string, logOutput *LoggerOutput) error {
+func InitServiceLogger(cfg LoggerConfig, logOutput *LoggerOutput) error {
 
 	if logOutput == nil {
 		return fmt.Errorf("a Logger Output object must be provided")
 	}
 
 	// Inits logger global instance to use it all around the project.
-	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Str("service", serviceName).Logger()
+	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 	// Create a multi level writer to allow output logs in console and
 	// in the declared byte array.
@@ -65,7 +65,7 @@ func InitServiceLogger(cfg LoggerConfig, serviceName string, logOutput *LoggerOu
 	log.Logger = log.Output(writer)
 
 	// Set log level.
-	switch strings.ToLower("info") {
+	switch strings.ToLower(cfg.LogLevel) {
 	case zerolog.LevelInfoValue:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	case zerolog.LevelDebugValue:
