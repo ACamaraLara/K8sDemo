@@ -2,27 +2,30 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
 	"time"
 
+	"api-gateway/internal/restServer"
+
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/inputParams"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	serviceName string = "API-gateway"
-)
-
 func main() {
 	// Read input parameters.
+	inputParams := inputParams.SetInputParams()
 	fmt.Println("Starting application")
 
 	// Create channel where zerolog will enqueue all logs
-	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 1000)}
+	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 10000)}
 
 	// Init Logger with selected level.
-	if err := logger.InitServiceLogger(logger.LoggerConfig{LogLevel: zerolog.LevelInfoValue},
-		serviceName, loggerOutput); err != nil {
+	if err := logger.InitServiceLogger(logger.LoggerConfig{LogLevel: zerolog.LevelDebugValue},
+		loggerOutput); err != nil {
 		fmt.Println("Error initializing logger:", err)
 		return
 	}
@@ -32,15 +35,24 @@ func main() {
 		return
 	}
 
+	restServer.InitRestRoutes() //&rbMQ)
+
+	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
+	router := restServer.NewRouter()
+
 	go func() {
 		count := 0
 		for {
-			log.Info().Int("count", count).Msg("Incrementing counter loki + stdout")
-			// log.Info().Msgf("Incrementing counter loki: %d", count)
+			log.Debug().Int("count", count).Msg("Incrementing counter loki + stdout")
 			count++
 			time.Sleep(10 * time.Second)
 		}
 	}()
 
+	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
+	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
+
+	// Starts listening for HTTP requests.
+	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
 	select {}
 }

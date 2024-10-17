@@ -2,19 +2,16 @@
 # Declare variables to be passed into your templates.
 
 app: api-gateway
-# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   name: api-gateway-svc
-  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: NodePort
-  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
-  targetPort: 80
-  nodePort: 32037
+  port: 8080
+  targetPort: 8080
+  nodePort: 32023
 
 deployment:
   name: api-gateway
   replicaCount: 1
   image:
     repository: camsagaz/api-gateway
-    version: latest
+    version: v0.1.4
