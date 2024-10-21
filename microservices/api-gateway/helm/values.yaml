@@ -14,4 +14,11 @@ deployment:
   replicaCount: 1
   image:
     repository: camsagaz/api-gateway
-    version: v0.1.4
+    version: v0.1.5
+  env:
+    rabbitHost: rabbitmq.messaging.svc.cluster.local
+
+secrets: #This is just a prove of concept to manage secrets in the easiest way.
+  name: admin-secret
+  username: admin
+  password: admin_pass
