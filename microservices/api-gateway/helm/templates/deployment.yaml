@@ -2,7 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.deployment.name }}
-  app: {{ .Values.app }}
+  labels:
+    app: {{ .Values.app }}
 spec:
   replicas: {{ .Values.deployment.replicaCount }}
   selector:
@@ -21,3 +22,16 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: password
+            - name: RABBITMQ_HOST
+              value: {{ .Values.deployment.env.rabbitHost }}
