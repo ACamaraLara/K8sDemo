@@ -39,7 +39,7 @@ func (rbMQ *AMQPConn) InitConnection() error {
 
 	rbMQ.Channel = ch
 
-	log.Debug().Msg("Connection established with address " + url)
+	log.Info().Msg("Connection established with address " + url)
 
 	return nil
 }
