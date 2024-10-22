@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 )
 
@@ -11,6 +12,7 @@ type InputParams struct {
 	RESTPort int
 	Logger   logger.LoggerConfig
 	Rabbit   rabbitmq.RabbitConfig
+	Mongo    mongodb.MongoConfig
 }
 
 // SetInputParams returns an object that stores service config parameters.
