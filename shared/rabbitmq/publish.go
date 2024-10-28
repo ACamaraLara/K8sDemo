@@ -19,12 +19,17 @@ func isJsonWellFormated(jsonBody []byte) bool {
 // because every declared queue gets an implicit route to the default exchange.
 // @param mandatory If true, message goes to the specified Queue to the first position.
 // @throws error with the specific message error. Null otherwise.
-func (rbMQ *AMQPConn) PublishJsonMessage(jsonBody []byte, exchangeName, routingKey string, mandatory bool) error {
+func (rbMQ *AMQPConn) PublishJsonMessage(messageObject interface{}, exchangeName, routingKey string, mandatory bool) error {
+
+	jsonBody, err := json.Marshal(messageObject)
+	if err != nil {
+		return err
+	}
 
 	if !isJsonWellFormated(jsonBody) {
 		return fmt.Errorf("json bad formatted, cannot send it to the broker")
 	}
-	err := rbMQ.RbWrapper.Publish(rbMQ.Channel, jsonBody, exchangeName, routingKey, mandatory)
+	err = rbMQ.RbWrapper.Publish(rbMQ.Channel, jsonBody, exchangeName, routingKey, mandatory)
 	if err != nil {
 
 		return err

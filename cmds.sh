@@ -10,4 +10,5 @@ echo "Deploying RabbitMQ..."
 helm install rabbitmq helm/charts/rabbitmq --namespace messaging --create-namespace
 echo "Deploying api-gateway microservice"
 helm install api-gateway ./microservices/api-gateway --namespace microservices --create-namespace
+helm install api-gateway ./microservices/account-service --namespace microservices
 

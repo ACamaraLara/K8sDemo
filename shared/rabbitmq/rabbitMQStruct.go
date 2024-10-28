@@ -3,7 +3,8 @@ package rabbitmq
 import (
 	"flag"
 
-	config "github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -14,11 +15,12 @@ const (
 	DefaultRabbitPass = "admin_pass" // Prove of concept. This wouldn't be here in production projects.
 )
 
+// RabbitConfig holds the configuration details required to connect to a RabbitMQ server.
 type RabbitConfig struct {
-	Host   string
-	Port   int
-	User   string
-	Passwd string
+	Host   string // Address of the RabbitMQ server.
+	Port   int    // Port number on which the RabbitMQ server is listening.
+	User   string // Username used for authenticating to the RabbitMQ server.
+	Passwd string // Password used for authenticating to the RabbitMQ server.
 }
 
 // Struct that stores a connection to RabbitMQ broker.
@@ -49,6 +51,6 @@ func NewAMQPConn(cfg RabbitConfig) *AMQPConn {
 func (cfg *RabbitConfig) AddFlagsParams() {
 	flag.StringVar(&cfg.Host, "rabbit-host", config.GetEnvironWithDefault("RABBITMQ_HOST", DefaultRabbitHost), "RabbitMQ broker address (RABBITMQ_HOST).")
 	flag.IntVar(&cfg.Port, "rabbit-port", config.GetEnvironIntWithDefault("RABBITMQ__PORT", DefaultRabbitPort), "RabbitMQ broker port (RABBITMQ__PORT).")
-	flag.StringVar(&cfg.User, "rabbit-user", config.GetEnvironWithDefault("RABBITMQ_USER", DefaultRabbitUser), "User to connect to RabbitMQ broker (RABBITMQ_USER).")
-	flag.StringVar(&cfg.Passwd, "rabbit-passwd", config.GetEnvironWithDefault("RABBITMQ_PASSWD", DefaultRabbitPass), "RabbitMQ password (RABBITMQ_PASSWD).")
+	flag.StringVar(&cfg.User, "rabbit-user", config.GetEnvironWithDefault("USERNAME", DefaultRabbitUser), "User to connect to RabbitMQ broker (RABBITMQ_USER).")
+	flag.StringVar(&cfg.Passwd, "rabbit-passwd", config.GetEnvironWithDefault("PASSWORD", DefaultRabbitPass), "RabbitMQ password (RABBITMQ_PASSWD).")
 }

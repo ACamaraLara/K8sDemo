@@ -30,6 +30,7 @@ func (rbW *RabbitWrapper) Channel(conn *amqp.Connection) (*amqp.Channel, error) 
 }
 
 func (rbW *RabbitWrapper) CloseChannel(ch *amqp.Channel) error {
+
 	return ch.Close()
 }
 
@@ -50,9 +51,7 @@ func (rbW *RabbitWrapper) Consume(ch *amqp.Channel, queueName string) (<-chan am
 }
 
 func (rbW *RabbitWrapper) Publish(ch *amqp.Channel, jsonBody []byte, exchangeName, routingKey string, mandatory bool) error {
-	// Empty context by the moment. A context is used to create signals for the message as a
-	// timeout or a reception confirmation signal.
-
+	// Empty context by the moment. Not needed.
 	ctx := context.Background()
 
 	return ch.PublishWithContext(

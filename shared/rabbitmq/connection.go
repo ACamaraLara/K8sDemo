@@ -37,6 +37,13 @@ func (rbMQ *AMQPConn) InitConnection() error {
 		return err
 	}
 
+	// Enable Publisher Confirms on the channel
+	err = ch.Confirm(false)
+	if err != nil {
+		log.Error().Msg("Failed to enable publisher confirms: " + err.Error())
+		return err
+	}
+
 	rbMQ.Channel = ch
 
 	log.Info().Msg("Connection established with address " + url)
