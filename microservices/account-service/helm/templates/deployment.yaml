@@ -36,3 +36,9 @@ spec:
                   key: password
             - name: RABBITMQ_HOST
               value: {{ .Values.deployment.env.rabbitHost }}
+            - name: MONGODB_HOST
+              value: {{ .Values.deployment.env.mongoHost }}
+            - name: MONGODB_DATABASE
+              value: {{ .Values.deployment.env.mongoDatabase }}
+            - name: MONGODB_COLLECTION
+              value: {{ .Values.deployment.env.mongoCollection }}

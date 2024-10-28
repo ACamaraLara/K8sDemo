@@ -1,15 +1,14 @@
 package restServer
 
 import (
-
-	// amqp_mocks "msgbrokerlib/mocks"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
+
 	"github.com/gin-gonic/gin"
-	// rabbitmq "github.com/rabbitmq/amqp091-go"
 	"github.com/rs/zerolog"
 )
 
@@ -19,55 +18,6 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 	// Disables gin REST connection verbose logs.
 	gin.SetMode(gin.ReleaseMode)
-}
-
-// Simulates a POST request to the service. Should not fail.
-func TestHandleAddParkingInfoNotFail(t *testing.T) {
-
-	// testJsonInfo, err := os.ReadFile("testdata/testPOST.json")
-
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// var testInfoBuff bytes.Buffer
-
-	// testInfoBuff.Write(testJsonInfo)
-
-	// wr := httptest.NewRecorder()
-	// req := httptest.NewRequest(http.MethodPost, "/SGORA", &testInfoBuff)
-
-	// c, _ := gin.CreateTestContext(wr)
-	// c.Request = req
-
-	// conn := &amqp.AMQPConn{RbWrapper: &amqp_mocks.RabbitMock{Msgs: make(chan rabbitmq.Delivery, 1)}}
-	// ParkingMeterInfoPublish(c, conn)
-	// if wr.Code != http.StatusCreated {
-	// 	t.Errorf("got HTTP status code %d, expected 201", wr.Code)
-	// }
-}
-
-// Simulates a bad POST request. Should fail.
-func TestHandleOublishParkingInfoFail(t *testing.T) {
-
-	// testFailInfo := []byte("This is fail info")
-
-	// var testInfoBuff bytes.Buffer
-
-	// testInfoBuff.Write(testFailInfo)
-
-	// wr := httptest.NewRecorder()
-	// req := httptest.NewRequest(http.MethodPost, "/SGORA", &testInfoBuff)
-
-	// c, _ := gin.CreateTestContext(wr)
-	// c.Request = req
-
-	// conn := &amqp.AMQPConn{RbWrapper: &amqp_mocks.RabbitMock{}}
-	// ParkingMeterInfoPublish(c, conn)
-
-	// if wr.Code != http.StatusUnprocessableEntity {
-	// 	t.Fatalf("got HTTP status code %d, expected 422", wr.Code)
-	// }
 }
 
 // Simulates a GET request to Main Handler. Should not fail.
@@ -86,7 +36,7 @@ func TestHandleMainCallNotFail(t *testing.T) {
 
 	if !strings.Contains(wr.Body.String(), "Welcome to Kubernetes Blockchain") {
 		t.Errorf(
-			`response body "%s" does not contain "Welcome to SGORA"`,
+			`response body "%s" does not contain "Welcome to Kubernetes Blockchain"`,
 			wr.Body.String(),
 		)
 	}
@@ -95,7 +45,7 @@ func TestHandleMainCallNotFail(t *testing.T) {
 // Simulates Bad requests to the different urls of the Service. Should return 404 not found.
 func TestBadService(t *testing.T) {
 	// For execute different subtests, create a new router.
-	router := NewRouter()
+	router := restRouter.NewRouter()
 
 	// Define different subtests with bad calls
 	tests := []struct {
@@ -104,13 +54,13 @@ func TestBadService(t *testing.T) {
 		path   string
 	}{
 		{"TestBadMainCall", http.MethodPost, "/"},
-		{"TestBadSgoraCallPut", http.MethodPut, "/SGORA"},
-		{"TestBadSgoraCallPatch", http.MethodPatch, "/SGORA"},
-		{"TestBadSgoraCallDelete", http.MethodDelete, "/SGORA"},
-		{"TestBadIDCallPut", http.MethodPut, "/SGORA/123"},
-		{"TestBadIDCallPatch", http.MethodPatch, "/SGORA/123"},
-		{"TestBadIDCallDelete", http.MethodDelete, "/SGORA/123"},
-		{"TestBadIDCallPost", http.MethodPost, "/SGORA/123"},
+		{"TestBadSgoraCallPut", http.MethodPut, "/K8DEMO"},
+		{"TestBadSgoraCallPatch", http.MethodPatch, "/K8DEMO"},
+		{"TestBadSgoraCallDelete", http.MethodDelete, "/K8DEMO"},
+		{"TestBadIDCallPut", http.MethodPut, "/K8DEMO/123"},
+		{"TestBadIDCallPatch", http.MethodPatch, "/"},
+		{"TestBadIDCallDelete", http.MethodDelete, "/"},
+		{"TestBadIDCallPost", http.MethodPost, "/"},
 	}
 
 	// Iterate over the subtests.

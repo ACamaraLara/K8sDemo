@@ -28,3 +28,7 @@ func (mgW *MongoMock) PingToDB(mb *MongoDBClient, ctx context.Context) error {
 func (mgW *MongoMock) InsertData(mb *MongoDBClient, ctx context.Context, document interface{}) (*mongo.InsertOneResult, error) {
 	return &mongo.InsertOneResult{}, nil
 }
+
+func (mgW *MongoMock) FindOne(ctx context.Context, mb *MongoDBClient, filter interface{}) *mongo.SingleResult {
+	return &mongo.SingleResult{}
+}

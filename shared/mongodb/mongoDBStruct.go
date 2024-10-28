@@ -19,12 +19,12 @@ type MongoConfig struct {
 
 // Default values are meant for development and testing purposes.
 const (
-	DefaultMongoDBHost       = "localhost"
+	DefaultMongoDBHost       = "mongodb"
 	DefaultMongoDBPort       = 27017
-	DefaultMongoDBUserName   = "smge"
-	DefaultMongoDBUserPass   = "smge"
-	DefaultMongoDBName       = "SMGE"
-	DefaultMongoDBCollection = "SGORA"
+	DefaultMongoDBUserName   = "admin"
+	DefaultMongoDBUserPass   = "admin_pass"
+	DefaultMongoDBName       = "K8DEMO"
+	DefaultMongoDBCollection = "USERS"
 )
 
 // Struct that stores a connection to MongoDataBase.
@@ -39,11 +39,11 @@ func NewMongoDBClient(cfg MongoConfig) *MongoDBClient {
 	return &MongoDBClient{Config: &cfg, DBWrapper: &MongoWrapper{}}
 }
 
-func AddFlagsParams(cfg *MongoConfig) {
+func (cfg *MongoConfig) AddFlagsParams() {
 	flag.StringVar(&cfg.Host, "mongo-host", config.GetEnvironWithDefault("MONGODB_HOST", DefaultMongoDBHost), "MongoDB server host (MONGODB_HOST).")
 	flag.IntVar(&cfg.Port, "mongo-port", config.GetEnvironIntWithDefault("MONGODB__PORT", DefaultMongoDBPort), "MongoDB server port (MONGODB__PORT).")
 	flag.StringVar(&cfg.DbName, "mongo-db", config.GetEnvironWithDefault("MONGODB_DATABASE", DefaultMongoDBName), "MongoDB database name (MONGODB_DATABASE).")
 	flag.StringVar(&cfg.Collection, "mongo-collection", config.GetEnvironWithDefault("MONGODB_COLLECTION", DefaultMongoDBCollection), "MongoDB collection (MONGODB_COLLECTION).")
-	flag.StringVar(&cfg.User, "mongo-user", config.GetEnvironWithDefault("MONGODB_USER", DefaultMongoDBUserName), "MongoDB username (MONGODB_USER).")
-	flag.StringVar(&cfg.Passwd, "mongo-passwd", config.GetEnvironWithDefault("MONGODB_PASSWD", DefaultMongoDBUserPass), "MongoDB password (MONGODB_PASSWD).")
+	flag.StringVar(&cfg.User, "mongo-user", config.GetEnvironWithDefault("USERNAME", DefaultMongoDBUserName), "MongoDB username (MONGODB_USER).")
+	flag.StringVar(&cfg.Passwd, "mongo-passwd", config.GetEnvironWithDefault("PASSWORD", DefaultMongoDBUserPass), "MongoDB password (MONGODB_PASSWD).")
 }

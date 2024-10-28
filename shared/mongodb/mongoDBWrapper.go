@@ -13,6 +13,7 @@ type IMongoWrapper interface {
 	Disconnect(mb *MongoDBClient, ctx context.Context) error
 	PingToDB(mb *MongoDBClient, ctx context.Context) error
 	InsertData(mb *MongoDBClient, ctx context.Context, document interface{}) (*mongo.InsertOneResult, error)
+	FindOne(ctx context.Context, mb *MongoDBClient, filter interface{}) *mongo.SingleResult
 }
 
 type MongoWrapper struct{}
@@ -35,4 +36,8 @@ func (mgW *MongoWrapper) PingToDB(mb *MongoDBClient, ctx context.Context) error 
 
 func (mgW *MongoWrapper) InsertData(mb *MongoDBClient, ctx context.Context, document interface{}) (*mongo.InsertOneResult, error) {
 	return mb.Collection.InsertOne(ctx, document)
+}
+
+func (mgW *MongoWrapper) FindOne(ctx context.Context, mb *MongoDBClient, filter interface{}) *mongo.SingleResult {
+	return mb.Collection.FindOne(ctx, filter)
 }

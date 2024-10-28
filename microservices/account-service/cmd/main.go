@@ -1,14 +1,14 @@
 package main
 
 import (
+	"account-service/internal/inputParams"
+	"account-service/internal/restServer"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"api-gateway/internal/inputParams"
-	"api-gateway/internal/restServer"
-
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 
@@ -18,10 +18,9 @@ import (
 func main() {
 	// Read input parameters.
 	inputParams := inputParams.SetInputParams()
-	fmt.Println("Starting application")
 
-	// Create channel where zerolog will enqueue logs
-	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 10000)}
+	// Create the queue where ZeroLog will enqueue logs.
+	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 1000)}
 
 	// Init Logger with selected level.
 	if err := logger.InitServiceLogger(inputParams.Logger, loggerOutput); err != nil {
@@ -34,19 +33,32 @@ func main() {
 		return
 	}
 
-	rbMQ := *rabbitmq.NewAMQPConn(inputParams.Rabbit)
+	// Connect to MongoDB data base with the input parameters.
+	log.Info().Msg("Connecting to mongodb..." + inputParams.Mongo.GetURL())
+	mongoConn := mongodb.NewMongoDBClient(inputParams.Mongo)
+
+	err := mongoConn.ConnectMongoClient()
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+	}
+
+	defer mongoConn.DisconnectMongoClient()
+
+	rbMQ := rabbitmq.NewAMQPConn(inputParams.Rabbit)
 
 	if err := rbMQ.InitConnection(); err != nil {
 		log.Fatal().Msg(err.Error())
 	}
 
-	// Close connection before app ends.
-	defer rbMQ.CloseConnection()
-
+	// FIXME: move queue declaration to msgbrokerlib
 	if err := rbMQ.DeclareQueue("USERS", false, false, false, false); err != nil {
 		log.Fatal().Msg(err.Error())
 	}
-	restServer.InitRestRoutes(&rbMQ)
+
+	// Defer means that shuld be executed at the end of current scope.
+	defer rbMQ.CloseConnection()
+
+	restServer.InitRestRoutes(mongoConn)
 
 	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
 	router := restRouter.NewRouter()
@@ -56,4 +68,6 @@ func main() {
 
 	// Starts listening for HTTP requests.
 	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
+	log.Info().Msg("Exiting...")
+
 }
