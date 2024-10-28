@@ -8,10 +8,9 @@ import (
 
 // Structure to store Log information.
 type LogData struct {
-	Time        time.Time `json:"time"`
-	ServiceName string    `json:"service"`
-	Level       string    `json:"level"`
-	Message     string    `json:"message"`
+	Time    time.Time `json:"time"`
+	Level   string    `json:"level"`
+	Message string    `json:"message"`
 	// This attribute is an interface because its used to that fields that
 	// are not pressent in LogData struct. Whith this, you can add any type of field
 	// to a log from ZeroLog library.
@@ -40,7 +39,7 @@ func (ld *LogData) UnmarshalJSON(data []byte) error {
 	}
 
 	// Check if any mandatory field is empty (That means library bad behavior)
-	if ld.Level == "" || ld.Message == "" || ld.ServiceName == "" {
+	if ld.Level == "" || ld.Message == "" {
 		return fmt.Errorf("LogData struct cannot have empty fields")
 	}
 

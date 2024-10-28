@@ -11,7 +11,7 @@ func TestInitServiceLoggerNotFail(t *testing.T) {
 
 	logWriter := &LoggerOutput{LogQueue: make(chan []byte, 1000)}
 
-	if err := InitServiceLogger(LoggerConfig{"INFO"}, "testService", logWriter); err != nil {
+	if err := InitServiceLogger(LoggerConfig{"INFO"}, logWriter); err != nil {
 		t.Fatal("Unexpected error initializing logger: ", err)
 	}
 
@@ -33,7 +33,7 @@ func TestInitServiceLoggerNotFail(t *testing.T) {
 func TestInitServiceLoggerFail(t *testing.T) {
 
 	// Expected error got from file LogHandler.go in line 33.
-	if err := InitServiceLogger(LoggerConfig{"INFO"}, "testService", nil); err.Error() != "a Logger Output object must be provided" {
+	if err := InitServiceLogger(LoggerConfig{"INFO"}, nil); err.Error() != "a Logger Output object must be provided" {
 		t.Fatalf("Unexpected error message. Expected-> %s. Got -> %s", "a Logger Output object must be provided", err.Error())
 	}
 

@@ -27,11 +27,6 @@ func TestUnmarshalSimpleJsonNotFail(t *testing.T) {
 			"TestMessage.", testLogData.Message)
 	}
 
-	if testLogData.ServiceName != "TestService" {
-		t.Errorf("Expected log level = %s, but got = %s -> ",
-			"TestService", testLogData.ServiceName)
-	}
-
 	timeTest, _ := time.Parse("2006-01-02T15:04:05-07:00", "2023-06-01T11:32:55+02:00")
 
 	if testLogData.Time != timeTest {

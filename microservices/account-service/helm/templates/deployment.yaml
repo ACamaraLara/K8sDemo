@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  labels:
+    app: {{ .Values.app }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app }}
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: {{ .Values.app }}
+    spec:
+      containers:
+        - name: {{ .Values.app }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.version}}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: username
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: password
+            - name: RABBITMQ_HOST
+              value: {{ .Values.deployment.env.rabbitHost }}
+            - name: MONGODB_HOST
+              value: {{ .Values.deployment.env.mongoHost }}
+            - name: MONGODB_DATABASE
+              value: {{ .Values.deployment.env.mongoDatabase }}
+            - name: MONGODB_COLLECTION
+              value: {{ .Values.deployment.env.mongoCollection }}
