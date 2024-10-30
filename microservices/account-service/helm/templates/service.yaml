@@ -9,4 +9,4 @@ spec:
       targetPort: {{ .Values.service.targetPort }}
       nodePort: {{ .Values.service.nodePort }}
   selector:
-    app: api-gateway
+    app: {{ .Values.app }}

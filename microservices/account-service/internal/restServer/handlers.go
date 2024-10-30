@@ -30,9 +30,9 @@ func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDBClient) {
 	}
 
 	var newUser dataTypes.User
-	if err := c.ShouldBindJSON(newUser); err != nil {
-		log.Error().Msg("Invalid request payload.")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload."})
+	if err := c.ShouldBindJSON(&newUser); err != nil {
+		log.Error().Msg("Invalid request payload." + err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload." + err.Error()})
 		return
 	}
 
@@ -42,6 +42,7 @@ func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDBClient) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error."})
 		return
 	} else if exists {
+		log.Error().Msg("User already registered.")
 		c.JSON(http.StatusConflict, gin.H{"error": "User already registered."})
 		return
 	}

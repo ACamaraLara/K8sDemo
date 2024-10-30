@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const accountServiceUri string = "http://account.service.com/"
+const accountServiceUri string = "http://account-service-svc.microservices.svc.cluster.local/"
 
 var usersClient = &http.Client{
 	Timeout: 5 * time.Second,
