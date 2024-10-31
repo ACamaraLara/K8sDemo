@@ -1,8 +1,12 @@
+//go:build exclude_from_coverage
+// +build exclude_from_coverage
+
 package main
 
 import (
 	"account-service/internal/inputParams"
 	"account-service/internal/restServer"
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -16,6 +20,8 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // This will allow us to cancel the context on app shutdown
 	// Read input parameters.
 	inputParams := inputParams.SetInputParams()
 
@@ -37,12 +43,12 @@ func main() {
 	log.Info().Msg("Connecting to mongodb..." + inputParams.Mongo.GetURL())
 	mongoConn := mongodb.NewMongoDBClient(inputParams.Mongo)
 
-	err := mongoConn.ConnectMongoClient()
+	err := mongoConn.ConnectMongoClient(ctx)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
 
-	defer mongoConn.DisconnectMongoClient()
+	defer mongoConn.DisconnectMongoClient(ctx)
 
 	rbMQ := rabbitmq.NewAMQPConn(inputParams.Rabbit)
 

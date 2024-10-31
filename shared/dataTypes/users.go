@@ -8,9 +8,8 @@ const (
 )
 
 type User struct {
-	FirstName string     `json:"firstName"`
-	LastName  string     `json:"lastName"`
-	Email     string     `json:"email"`
-	Password  string     `json:"password"`
-	Action    ActionType `json:"action"`
+	FirstName string `json:"firstName" bson:"firstName"`
+	LastName  string `json:"lastName" bson:"lastName"`
+	Email     string `json:"email" bson:"email"`
+	Password  string `json:"password" bson:"password"`
 }

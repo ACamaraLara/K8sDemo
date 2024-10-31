@@ -1,4 +1,4 @@
-package rabbitMocks
+package rabbitmq
 
 import (
 	rabbitmq "github.com/rabbitmq/amqp091-go"

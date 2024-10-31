@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	rabbitMocks "github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq/mocks"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -31,7 +29,7 @@ func TestConsumeMessageWithoutConnection(t *testing.T) {
 
 type testConsumeMsg struct {
 	RbMQ        *AMQPConn
-	RbMock      *rabbitMocks.RabbitMock
+	RbMock      *RabbitMock
 	ProcessFunc func([]byte) error
 	Wg          sync.WaitGroup
 	Msg         *amqp.Delivery
@@ -41,7 +39,7 @@ func (tstC *testConsumeMsg) setSimpleTestConsumeParams() {
 
 	// Create Mock object and allocate it in  an AMQPConn object.
 	tstC.RbMQ = &AMQPConn{Conn: &amqp.Connection{}}
-	tstC.RbMock = rabbitMocks.NewRabbitMock()
+	tstC.RbMock = NewRabbitMock()
 	tstC.RbMQ.RbWrapper = tstC.RbMock
 
 	// WaitGroupVariable

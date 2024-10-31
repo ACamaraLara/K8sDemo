@@ -2,7 +2,6 @@ package restServer
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/dataTypes"
@@ -16,18 +15,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var SECRET_KEY = []byte("k8dsecretkey")
+var SECRET_KEY = []byte("k8ssecretkey")
 
-// This is the main page of our web server. The information will be shown
-// while doing a REST GET to the URL of this service
-// (http://www.localhost:8080/ in this case).
 func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDBClient) {
 	log.Info().Msg("Registering new user.")
-	if c.Request.Method != http.MethodPost {
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(c.Writer, "Expected Post method!.")
-		return
-	}
 
 	var newUser dataTypes.User
 	if err := c.ShouldBindJSON(&newUser); err != nil {
@@ -115,10 +106,10 @@ func checkUserExists(mongoClient *mongodb.MongoDBClient, ctx context.Context, us
 	filter := bson.M{"email": user.Email}
 	var existingUser dataTypes.User
 	err := mongoClient.DBWrapper.FindOne(ctx, mongoClient, filter).Decode(&existingUser)
-	if err != nil && err != mongo.ErrNoDocuments {
+	if err != nil && err != mongo.ErrNoDocuments && err != mongo.ErrNilDocument {
 		return false, err
 	}
-	return err != mongo.ErrNoDocuments, nil
+	return (err != mongo.ErrNoDocuments && err != mongo.ErrNilDocument), nil
 }
 
 func findUserByEmail(mongoClient *mongodb.MongoDBClient, ctx context.Context, email string, user *dataTypes.User) error {

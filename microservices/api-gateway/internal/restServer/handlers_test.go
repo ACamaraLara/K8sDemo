@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
+	"github.com/go-playground/assert/v2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -84,4 +85,15 @@ func TestBadService(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBadMainCall(t *testing.T) {
+	req := &http.Request{Method: http.MethodPost}
+
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Request = req
+
+	Main(ctx)
+
+	assert.Equal(t, http.StatusBadRequest, ctx.Writer.Status())
 }
