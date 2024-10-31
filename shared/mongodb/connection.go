@@ -16,11 +16,11 @@ func (mb *MongoConfig) GetURL() string {
 
 // ConnectMongoClient connects the initialized object to the given database.
 // @throws an error if something went wrong during the connection.
-func (mb *MongoDBClient) ConnectMongoClient() error {
+func (mb *MongoDBClient) ConnectMongoClient(ctx context.Context) error {
 
 	clientOptions := options.Client().ApplyURI(mb.Config.GetURL())
 
-	client, err := mb.DBWrapper.Connect(context.Background(), clientOptions)
+	client, err := mb.DBWrapper.Connect(ctx, clientOptions)
 
 	if err != nil {
 		return fmt.Errorf("error connecting to MongoDB url: %v", err)
@@ -28,7 +28,7 @@ func (mb *MongoDBClient) ConnectMongoClient() error {
 
 	mb.Client = client
 
-	if !mb.checkConnection() {
+	if !mb.checkConnection(ctx) {
 		return fmt.Errorf("mongodb connection check failed")
 	}
 
@@ -42,9 +42,9 @@ func (mb *MongoDBClient) ConnectMongoClient() error {
 }
 
 // DisconnectMongoClient disconnects this object from the database.
-func (mb *MongoDBClient) DisconnectMongoClient() error {
+func (mb *MongoDBClient) DisconnectMongoClient(ctx context.Context) error {
 
-	if err := mb.DBWrapper.Disconnect(mb, context.Background()); err != nil {
+	if err := mb.DBWrapper.Disconnect(mb, ctx); err != nil {
 		return fmt.Errorf("error disconnecting from database %v", err)
 	}
 
@@ -56,15 +56,15 @@ func (mb *MongoDBClient) DisconnectMongoClient() error {
 }
 
 // Function to check if the client is successfully connected to database.
-func (mb *MongoDBClient) checkConnection() bool {
+func (mb *MongoDBClient) checkConnection(ctx context.Context) bool {
 
 	if mb.Client == nil {
 		return false
 	}
 
-	err := mb.DBWrapper.PingToDB(mb, context.Background())
+	err := mb.DBWrapper.PingToDB(mb, ctx)
 	if err != nil {
-		fmt.Println("Error in ping", err)
+		log.Error().Msg("Error pinging mongoDB:" + err.Error())
 	}
 
 	return err == nil

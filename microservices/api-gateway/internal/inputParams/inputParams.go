@@ -3,6 +3,7 @@ package inputParams
 import (
 	"flag"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 )
@@ -19,11 +20,10 @@ func SetInputParams() *InputParams {
 
 	var inputParams InputParams
 
-	flag.IntVar(&inputParams.RESTPort, "restPort", 8080, "REST server port.")
+	flag.IntVar(&inputParams.RESTPort, "restPort",
+		config.GetEnvironIntWithDefault("RABBITMQ__PORT", 8080), "RabbitMQ broker port (RABBITMQ__PORT).")
 	logger.AddFlagsParams(&inputParams.Logger)
 	inputParams.Rabbit.AddFlagsParams()
-
-	flag.Parse()
 
 	return &inputParams
 }
