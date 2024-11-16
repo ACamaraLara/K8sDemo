@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
 )
@@ -83,9 +81,7 @@ func getLogInLokiFormat(logData *LogData) ([]byte, error) {
 
 					return stream
 				}(),
-				"values": [][]string{
-					{strconv.FormatInt(time.Now().UnixNano(), 10), logData.Message},
-				},
+				"values": []string{logData.Message},
 			},
 		},
 	}

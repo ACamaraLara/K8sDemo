@@ -19,7 +19,7 @@ func GetUsersRoutes(rbMQ *rabbitmq.AMQPConn) restRouter.Routes {
 		},
 		restRouter.Route{
 			Method:  http.MethodPost,
-			Pattern: "//api/users/login",
+			Pattern: "/api/users/login",
 			Handler: func(c *gin.Context) {
 				AuthHandler(c, rbMQ, "login")
 			},

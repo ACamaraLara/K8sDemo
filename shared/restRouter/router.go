@@ -1,7 +1,6 @@
 package restRouter
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -44,10 +43,20 @@ func NewRouter() *gin.Engine {
 
 		//Add route to declared router.
 		switch route.Method {
-		case "GET":
+		case http.MethodGet:
 			router.GET(route.Pattern, route.Handler)
-		case "POST":
+		case http.MethodPost:
 			router.POST(route.Pattern, route.Handler)
+		case http.MethodPut:
+			router.PUT(route.Pattern, route.Handler)
+		case http.MethodPatch:
+			router.PATCH(route.Pattern, route.Handler)
+		case http.MethodDelete:
+			router.DELETE(route.Pattern, route.Handler)
+		case http.MethodHead:
+			router.HEAD(route.Pattern, route.Handler)
+		case http.MethodOptions:
+			router.OPTIONS(route.Pattern, route.Handler)
 		default:
 			log.Warn().Msg("Invalid HTTP method specified: " + route.Method)
 		}
@@ -67,46 +76,4 @@ func StatusHandler(c *gin.Context) {
 	}
 
 	c.Writer.WriteHeader(http.StatusOK)
-}
-
-func ReadRequestBody(c *gin.Context) ([]byte, error) {
-	// Read the request body
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Error().Msg(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body."})
-		return nil, err
-	}
-
-	// Close the request body
-	if err := c.Request.Body.Close(); err != nil {
-		log.Error().Msg(err.Error())
-		c.JSON(http.StatusInternalServerError,
-			gin.H{"error": "failed to close request body:" + err.Error()})
-		return nil, err
-	}
-
-	return body, nil
-}
-
-func DecodeRequestBody(c *gin.Context, target interface{}) error {
-	// Read the request body
-	body, err := ReadRequestBody(c)
-	if err != nil {
-		return err // The error is already handled in ReadRequestBody
-	}
-
-	// Unmarshal the body into the target object
-	if err := json.Unmarshal(body, target); err != nil {
-		// If cannot decode received JSON, return the error to the client.
-		c.Header("Content-Type", "application/json")
-		c.Writer.WriteHeader(http.StatusUnprocessableEntity)
-		if err := json.NewEncoder(c.Writer).Encode(gin.H{"error": "unprocessable entity"}); err != nil {
-			log.Error().Msg(err.Error())
-			return err
-		}
-		return err
-	}
-
-	return nil
 }

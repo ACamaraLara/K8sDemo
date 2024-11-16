@@ -3,8 +3,6 @@ package rabbitmq
 import (
 	"testing"
 
-	rabbitMocks "github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq/mocks"
-
 	"github.com/rs/zerolog"
 )
 
@@ -18,7 +16,7 @@ func init() {
 // Tests that connection func has the expected behavior.
 func TestConnectionNotFail(t *testing.T) {
 
-	rbMQ := &AMQPConn{RbWrapper: &rabbitMocks.RabbitMock{}}
+	rbMQ := &AMQPConn{RbWrapper: &RabbitMock{}}
 
 	if err := rbMQ.InitConnection(); err != nil {
 		t.Error("Expected none error but one given", err)
@@ -36,7 +34,7 @@ func TestConnectionNotFail(t *testing.T) {
 // Tests that close connection func has the expected behavior.
 func TestCloseConnectionNotFail(t *testing.T) {
 
-	rbMQ := &AMQPConn{RbWrapper: &rabbitMocks.RabbitMock{}}
+	rbMQ := &AMQPConn{RbWrapper: &RabbitMock{}}
 
 	if err := rbMQ.CloseConnection(); err != nil {
 		t.Error("Expected none error but one given", err)
