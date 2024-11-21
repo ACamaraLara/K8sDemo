@@ -1,74 +1,24 @@
+//go:build !skip
+
 package rabbitmq
 
-import (
-	"strconv"
+import "github.com/rabbitmq/amqp091-go"
 
-	"github.com/rs/zerolog/log"
-)
-
-// Returns a url with the necessary format to connect to RabbitMQ broker.
-func (rbMQ *AMQPConn) getURL() string {
-	return "amqp://" + rbMQ.User + ":" + rbMQ.Passwd + "@" + rbMQ.Address + ":" + strconv.Itoa(rbMQ.Port) + "/"
+// Wrapper for amqp.Connection
+type RabbitMQConnection struct {
+	conn *amqp091.Connection
 }
 
-// InitConnection starts a connection to RabbitMQ broker.
-// @param address of the broker to connect.
-// @param port port where broker is listenning to new connections.
-// @throws error if connection couldn't be established. Nil if connection
-// succesded.
-func (rbMQ *AMQPConn) InitConnection() error {
-
-	url := rbMQ.getURL()
-	log.Info().Msg("Rabbit URL " + url)
-
-	conn, err := rbMQ.RbWrapper.Dial(url)
-
+// returns a wrapper for the channel object.
+func (c *RabbitMQConnection) Channel() (Channel, error) {
+	ch, err := c.conn.Channel()
 	if err != nil {
-		log.Error().Msg("Connection cannot be established: " + err.Error())
-		return err
+		return nil, err
 	}
-
-	rbMQ.Conn = conn
-
-	ch, err := rbMQ.RbWrapper.Channel(rbMQ.Conn)
-
-	if err != nil {
-		log.Error().Msg("Error obtaining channel: " + err.Error())
-		return err
-	}
-
-	rbMQ.Channel = ch
-
-	log.Info().Msg("Connection established with address " + url)
-
-	return nil
+	return &RabbitMQChannel{channel: ch}, nil
 }
 
-// CloseConnection closes actual connection to the broker.
-// @throws error if there was a problem closing connection.
-// Nil otherwise.
-func (rbMQ *AMQPConn) CloseConnection() error {
-
-	if err := rbMQ.RbWrapper.CloseChannel(rbMQ.Channel); err != nil {
-		log.Error().Msg("Error closing channel: " + err.Error())
-		return err
-	}
-
-	rbMQ.Channel = nil
-
-	if err := rbMQ.RbWrapper.CloseConnection(rbMQ.Conn); err != nil {
-		log.Error().Msg("Error closing connection: " + err.Error())
-		return err
-	}
-
-	rbMQ.Conn = nil
-	log.Debug().Msg("Connection closed.")
-
-	return nil
-}
-
-// CheckIsConnected checks if the service connection to the broker is established.
-// @return True if the service is connected. False otherwise.
-func (rbMQ *AMQPConn) checkIsConnected() bool {
-	return rbMQ.Conn != nil
+// close channel connection.
+func (c *RabbitMQConnection) Close() error {
+	return c.conn.Close()
 }

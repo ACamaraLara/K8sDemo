@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetUsersRoutes(rbMQ *rabbitmq.AMQPConn) restRouter.Routes {
+func GetUsersRoutes(rbMQ *rabbitmq.RabbitMQClient) restRouter.Routes {
 	userRoutes := restRouter.Routes{
 		restRouter.Route{
 			Method:  http.MethodPost,

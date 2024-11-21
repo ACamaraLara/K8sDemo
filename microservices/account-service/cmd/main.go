@@ -1,19 +1,14 @@
-//go:build exclude_from_coverage
-// +build exclude_from_coverage
-
 package main
 
 import (
 	"account-service/internal/inputParams"
 	"account-service/internal/restServer"
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 
 	"github.com/rs/zerolog/log"
@@ -22,57 +17,29 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // This will allow us to cancel the context on app shutdown
-	// Read input parameters.
+
 	inputParams := inputParams.SetInputParams()
 
-	// Create the queue where ZeroLog will enqueue logs.
-	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 1000)}
+	logger := logger.InitServiceLogger(inputParams.Logger)
 
-	// Init Logger with selected level.
-	if err := logger.InitServiceLogger(inputParams.Logger, loggerOutput); err != nil {
-		fmt.Println("Error initializing logger:", err)
+	if err := logger.StartLokiLogPublishRoutine(); err != nil {
+		log.Error().Err(err).Msg("Error initializing Loki log routine:")
 		return
 	}
 
-	if err := logger.StartLokiLogPublishRoutine(loggerOutput); err != nil {
-		fmt.Println("Error initializing Loki log routine:", err)
-		return
-	}
-
-	// Connect to MongoDB data base with the input parameters.
 	log.Info().Msg("Connecting to mongodb..." + inputParams.Mongo.GetURL())
-	mongoConn := mongodb.NewMongoDBClient(inputParams.Mongo)
-
-	err := mongoConn.ConnectMongoClient(ctx)
+	mongoDB, err := mongodb.NewMongoDBClient(ctx, &inputParams.Mongo)
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+
 	}
 
-	defer mongoConn.DisconnectMongoClient(ctx)
+	defer mongoDB.Client.Disconnect(ctx)
 
-	rbMQ := rabbitmq.NewAMQPConn(inputParams.Rabbit)
-
-	if err := rbMQ.InitConnection(); err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-
-	// FIXME: move queue declaration to msgbrokerlib
-	if err := rbMQ.DeclareQueue("USERS", false, false, false, false); err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-
-	// Defer means that shuld be executed at the end of current scope.
-	defer rbMQ.CloseConnection()
-
-	restServer.InitRestRoutes(mongoConn)
-
-	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
-	router := restRouter.NewRouter()
+	router := restRouter.NewRouter(restServer.InitRestRoutes(mongoDB))
 
 	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
 	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
 
-	// Starts listening for HTTP requests.
 	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
 	log.Info().Msg("Exiting...")
 

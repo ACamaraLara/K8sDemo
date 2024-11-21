@@ -1,6 +1,3 @@
-//go:build exclude_from_coverage
-// +build exclude_from_coverage
-
 package main
 
 import (
@@ -23,36 +20,27 @@ func main() {
 	inputParams := inputParams.SetInputParams()
 	fmt.Println("Starting application")
 
-	// Create channel where zerolog will enqueue logs
-	loggerOutput := &logger.LoggerOutput{LogQueue: make(chan []byte, 10000)}
-
 	// Init Logger with selected level.
-	if err := logger.InitServiceLogger(inputParams.Logger, loggerOutput); err != nil {
-		fmt.Println("Error initializing logger:", err)
-		return
-	}
+	logger := logger.InitServiceLogger(inputParams.Logger)
 
-	if err := logger.StartLokiLogPublishRoutine(loggerOutput); err != nil {
+	if err := logger.StartLokiLogPublishRoutine(); err != nil {
 		fmt.Println("Error initializing Loki log routine:", err)
 		return
 	}
 
-	rbMQ := *rabbitmq.NewAMQPConn(inputParams.Rabbit)
-
-	if err := rbMQ.InitConnection(); err != nil {
+	rbMQ, err := rabbitmq.NewRabbitMQClient(&inputParams.Rabbit)
+	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
 
 	// Close connection before app ends.
-	defer rbMQ.CloseConnection()
+	defer rbMQ.Conn.Close()
 
 	if err := rbMQ.DeclareQueue("USERS", false, false, false, false); err != nil {
 		log.Fatal().Msg(err.Error())
 	}
-	restServer.InitRestRoutes(&rbMQ)
-
 	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
-	router := restRouter.NewRouter()
+	router := restRouter.NewRouter(restServer.InitRestRoutes(rbMQ))
 
 	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
 	log.Info().Msg("Listening for HTTP requests on port " + listenPort)

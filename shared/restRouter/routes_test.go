@@ -10,9 +10,9 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
-func InitTestStatusHandlerRoute() {
+func InitTestStatusHandlerRoute() Routes {
 
-	RoutesRepo = Routes{
+	return Routes{
 		// Route to status GET.
 		Route{
 			Method:  http.MethodGet,
@@ -58,12 +58,12 @@ func InitTestStatusHandlerRoute() {
 
 // Creates a new router and checks that contains all expected routes
 func TestDeclareRouter(t *testing.T) {
-	InitTestStatusHandlerRoute()
-	router := NewRouter()
+	routes := InitTestStatusHandlerRoute()
+	router := NewRouter(routes)
 
 	testRoutes := router.Routes()
 	t.Run("TestCheckCorrectRoutesAdded", func(t *testing.T) {
-		for idx, route := range RoutesRepo {
+		for idx, route := range routes {
 			if testRoutes[idx].Path != route.Pattern ||
 				testRoutes[idx].Method != route.Method {
 				t.Error("Expected route not found in created router")
@@ -84,7 +84,7 @@ func TestDeclareRouter(t *testing.T) {
 		{
 			Name:           "TestCheckBadRequestStatusHandler",
 			Method:         http.MethodPost,
-			ExpectedStatus: http.StatusBadRequest,
+			ExpectedStatus: http.StatusMethodNotAllowed,
 		},
 	}
 

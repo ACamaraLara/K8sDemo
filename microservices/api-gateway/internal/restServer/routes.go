@@ -8,10 +8,10 @@ import (
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 )
 
-func InitRestRoutes(rbMQ *rabbitmq.AMQPConn) {
+func InitRestRoutes(rbMQ *rabbitmq.RabbitMQClient) restRouter.Routes {
 
 	// In case of new routes, declare them here.
-	restRouter.RoutesRepo = restRouter.Routes{
+	routes := restRouter.Routes{
 		// This is the service entry point. Main page of IP::port service.
 		// Is just an example.
 		restRouter.Route{
@@ -27,5 +27,5 @@ func InitRestRoutes(rbMQ *rabbitmq.AMQPConn) {
 		},
 	}
 
-	restRouter.RoutesRepo = append(restRouter.RoutesRepo, users.GetUsersRoutes(rbMQ)...)
+	return append(routes, users.GetUsersRoutes(rbMQ)...)
 }

@@ -26,7 +26,7 @@ func TestSetInputParams_DefaultValues(t *testing.T) {
 	assert.Equal(t, mongodb.DefaultMongoDBHost, inputParams.Mongo.Host)
 	assert.Equal(t, mongodb.DefaultMongoDBPort, inputParams.Mongo.Port)
 	assert.Equal(t, mongodb.DefaultMongoDBName, inputParams.Mongo.DbName)
-	assert.Equal(t, mongodb.DefaultMongoDBCollection, inputParams.Mongo.Collection)
+	assert.Equal(t, mongodb.DefaultMongoDBCollection, inputParams.Mongo.Collections[0])
 	assert.Equal(t, mongodb.DefaultMongoDBUserName, inputParams.Mongo.User)
 	assert.Equal(t, mongodb.DefaultMongoDBUserPass, inputParams.Mongo.Passwd)
 }

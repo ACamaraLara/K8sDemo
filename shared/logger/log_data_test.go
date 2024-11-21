@@ -80,7 +80,7 @@ func TestUnmarshallEmptyLogLevelFail(t *testing.T) {
 
 	var testLogData LogData
 
-	if err := testLogData.UnmarshalJSON(testLog); err.Error() != "LogData struct cannot have empty fields" {
+	if err := testLogData.UnmarshalJSON(testLog); err.Error() != "LogData struct cannot have empty fields (Level and Message are mandatory)" {
 		t.Error("Obtained different error than expected. Obtained = ", err)
 	}
 }
@@ -91,7 +91,7 @@ func TestUnmarshallBadFormatedLogFail(t *testing.T) {
 
 	var testLogData LogData
 
-	if err := testLogData.UnmarshalJSON(testLog); err.Error() != "invalid character 'T' looking for beginning of value" {
+	if err := testLogData.UnmarshalJSON(testLog); err.Error() != "error unmarshalling known fields: invalid character 'T' looking for beginning of value" {
 		t.Error("Obtained different error than expected. Obtained = ", err)
 	}
 }

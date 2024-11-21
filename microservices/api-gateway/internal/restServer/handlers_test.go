@@ -24,21 +24,21 @@ func init() {
 // Simulates a GET request to Main Handler. Should not fail.
 func TestHandleMainCallNotFail(t *testing.T) {
 
-	wr := httptest.NewRecorder()
+	respWriter := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	c, _ := gin.CreateTestContext(wr)
+	c, _ := gin.CreateTestContext(respWriter)
 	c.Request = req
 
 	Main(c)
-	if wr.Code != http.StatusOK {
-		t.Errorf("got HTTP status code %d, expected 200", wr.Code)
+	if respWriter.Code != http.StatusOK {
+		t.Errorf("got HTTP status code %d, expected 200", respWriter.Code)
 	}
 
-	if !strings.Contains(wr.Body.String(), "Welcome to Kubernetes Blockchain") {
+	if !strings.Contains(respWriter.Body.String(), "Welcome to Kubernetes Blockchain") {
 		t.Errorf(
 			`response body "%s" does not contain "Welcome to Kubernetes Blockchain"`,
-			wr.Body.String(),
+			respWriter.Body.String(),
 		)
 	}
 }
@@ -46,7 +46,7 @@ func TestHandleMainCallNotFail(t *testing.T) {
 // Simulates Bad requests to the different urls of the Service. Should return 404 not found.
 func TestBadService(t *testing.T) {
 	// For execute different subtests, create a new router.
-	router := restRouter.NewRouter()
+	router := restRouter.NewRouter(restRouter.Routes{})
 
 	// Define different subtests with bad calls
 	tests := []struct {

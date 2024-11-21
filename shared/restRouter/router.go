@@ -1,7 +1,6 @@
 package restRouter
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 
@@ -17,29 +16,19 @@ type Route struct {
 	Handler gin.HandlerFunc
 }
 
-// Vector to store declared routes.
 type Routes []Route
 
-// Declare RoutesRepo and the handlers (actions) to do when
-// one of them are called.
-var RoutesRepo Routes
-
-func NewRouter() *gin.Engine {
+func NewRouter(routes Routes) *gin.Engine {
 	// Avoid GIN verbose messages.
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
-	// Create the muxer of our Rest server that will
-	// route each request and response to correspondent
-	// declared route. More info at:
-	// https://go.dev/doc/tutorial/web-service-gin
 	router := gin.Default()
+	RegisterRoutes(router, routes)
+	return router
+}
 
-	router.Use(func(c *gin.Context) {
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1<<20) // 1 MB limit
-		c.Next()
-	})
-
-	for _, route := range RoutesRepo {
+func RegisterRoutes(router *gin.Engine, routes Routes) {
+	for _, route := range routes {
 
 		//Add route to declared router.
 		switch route.Method {
@@ -61,19 +50,21 @@ func NewRouter() *gin.Engine {
 			log.Warn().Msg("Invalid HTTP method specified: " + route.Method)
 		}
 	}
-
-	// Return muxer with all its added routes.
-	return router
 }
 
 // This is the default status handler that will be used in every service.
 func StatusHandler(c *gin.Context) {
-	log.Info().Msg("Called GET status method.")
+	log.Info().Msg("Status endpoint hit")
+
 	if c.Request.Method != http.MethodGet {
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintln(c.Writer, "Expected GET method!.")
+		log.Error().Msg("Invalid method for status endpoint")
+		c.JSON(http.StatusMethodNotAllowed, gin.H{
+			"error": "invalid method, only GET is allowed",
+		})
 		return
 	}
 
-	c.Writer.WriteHeader(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{
+		"status": "ok",
+	})
 }

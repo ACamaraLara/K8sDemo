@@ -43,7 +43,7 @@ func TestGetEnvironIntWithDefault(t *testing.T) {
 	}
 
 	// Test when the environment variable is not set
-	os.Unsetenv(key) // Ensure the variable is not set
+	os.Unsetenv(key)
 	result = GetEnvironIntWithDefault(key, defaultValue)
 	if result != defaultValue {
 		t.Errorf("Expected %d, but got %d", defaultValue, result)
