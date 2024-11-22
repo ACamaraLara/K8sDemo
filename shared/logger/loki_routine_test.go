@@ -51,13 +51,9 @@ func TestStartLokiLogPublishRoutine(t *testing.T) {
 	os.Setenv("LOKI_URL", server.URL)
 	defer os.Unsetenv("LOKI_URL")
 
-	// Setup a dummy logger.
-	logWriter := &LoggerOutput{
-		LogQueue: make(chan []byte, 1),
-	}
-	InitServiceLogger(LoggerConfig{"INFO"}, logWriter)
+	logger := InitServiceLogger(LoggerConfig{"INFO", 1000})
 
-	if err := StartLokiLogPublishRoutine(logWriter); err != nil {
+	if err := logger.StartLokiLogPublishRoutine(); err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
 	}
 	// Send log to the queue managed my loki routine.

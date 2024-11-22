@@ -12,10 +12,10 @@ import (
 const lokiPostPath string = "/api/prom/push"
 
 // Returns URL to post in Loki logging service.
-func getLokiPostUrl() (string, error) {
+func getLokiPostUrl() string {
 	lokiBaseUrl := config.GetEnvironWithDefault("LOKI_URL", "http://loki:3100")
 	fmt.Println("Loki URL:", lokiBaseUrl)
-	return lokiBaseUrl + lokiPostPath, nil
+	return lokiBaseUrl + lokiPostPath
 }
 
 // StartLokiLogPublishRoutine starts routine to send logs coming
@@ -23,19 +23,16 @@ func getLokiPostUrl() (string, error) {
 // @param logWritter I/O writer to handle multilevel writer.
 // It is used to store the logs and send them to the routine
 // that will publish them in Loki.
-func StartLokiLogPublishRoutine(logWriter *LoggerOutput) error {
+func (log *Logger) StartLokiLogPublishRoutine() error {
 
 	// Declare url and http client to post logs to Loki db.
-	lokiPostURL, err := getLokiPostUrl()
-	if err != nil {
-		return fmt.Errorf("Error obtaining loki post URL " + err.Error())
-	}
+	lokiPostURL := getLokiPostUrl()
 
 	lokiClient := http.DefaultClient
 
 	// Infinite loop that listens to a LoqQueue channel for service logs.
 	go func() {
-		for log := range logWriter.LogQueue {
+		for log := range log.Buf.LogQueue {
 
 			// // Deserialize byte array in a LogData object.
 			var logData LogData

@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRestRoutes(mongoClient *mongodb.MongoDBClient) {
+func InitRestRoutes(mongoClient *mongodb.MongoDB) restRouter.Routes {
 
 	// In case of new routes, declare them here.
-	restRouter.RoutesRepo = restRouter.Routes{
+	return restRouter.Routes{
 		// Route to status GET.
 		restRouter.Route{
 			Method:  http.MethodGet,

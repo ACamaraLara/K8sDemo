@@ -17,7 +17,7 @@ var usersClient = &http.Client{
 	Timeout: 5 * time.Second,
 }
 
-func AuthHandler(c *gin.Context, rbMQ *rabbitmq.AMQPConn, action string) {
+func AuthHandler(c *gin.Context, rbMQ *rabbitmq.RabbitMQClient, action string) {
 	log.Info().Msg("Registering new user")
 	if c.Request.Method != http.MethodPost {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Expected POST method to register a user!"})

@@ -12,25 +12,34 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var router *gin.Engine
-var mockDBWrapper *mongodb.MongoMock
-var mongoDBClient *mongodb.MongoDBClient
-
-func init() {
-	// Init structures that are used by all tests like router, routes and mongodbClient.
-	gin.SetMode(gin.TestMode)
-	mockDBWrapper = new(mongodb.MongoMock)
-	mongoDBClient = &mongodb.MongoDBClient{Config: &mongodb.MongoConfig{}, DBWrapper: mockDBWrapper}
-	InitRestRoutes(mongoDBClient)
-	router = restRouter.NewRouter()
+type AuthTestSuite struct {
+	suite.Suite
+	router         *gin.Engine
+	mockClient     *mongodb.MockClient
+	mockCollection *mongodb.MockCollection
+	mongoDB        *mongodb.MongoDB
 }
 
-func TestSignupHandler(t *testing.T) {
+func (suite *AuthTestSuite) SetupTest() {
+	// Initialize structures used in all tests
+	gin.SetMode(gin.TestMode)
 
+	suite.mockClient = &mongodb.MockClient{}
+	suite.mockCollection = &mongodb.MockCollection{}
+	collections := make(map[string]mongodb.Collection)
+	collections["USERS"] = suite.mockCollection
+
+	suite.mongoDB = &mongodb.MongoDB{Client: suite.mockClient, Collections: collections}
+	routes := InitRestRoutes(suite.mongoDB)
+	suite.router = restRouter.NewRouter(routes)
+}
+
+func (suite *AuthTestSuite) TestSignupHandler() {
 	testUser := `{
 		"firstName": "Test",
 		"lastName": "User",
@@ -38,102 +47,109 @@ func TestSignupHandler(t *testing.T) {
 		"password": "password"
 	}`
 
-	mockDBWrapper.On("InsertData", mock.Anything, mock.Anything, mock.AnythingOfType("dataTypes.User")).Return(&mongo.InsertOneResult{}, nil)
+	suite.mockCollection.On("InsertOne", mock.Anything, mock.AnythingOfType("dataTypes.User"), mock.Anything).Return(&mongo.InsertOneResult{}, nil)
 
-	t.Run("Valid Signup", func(t *testing.T) {
-		mockDBWrapper.On("FindOne", mock.Anything, mongoDBClient, bson.M{"email": "test@example.com"}).Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
-
-		req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer([]byte(testUser)))
-		resp := httptest.NewRecorder()
-
-		router.ServeHTTP(resp, req)
-
-		assert.Equal(t, http.StatusCreated, resp.Code)
-		assert.Contains(t, resp.Body.String(), "User registered successfully.")
-	})
-
-	t.Run("User Already Registered", func(t *testing.T) {
-		mockDBWrapper.On("FindOne", mock.Anything, mongoDBClient, bson.M{"email": "test@example.com"}).Return(mongo.NewSingleResultFromDocument(bson.D{{Key: "email", Value: "test@example.com"}, {Key: "username", Value: "testuser"}}, nil, nil)).Once()
+	suite.Run("Valid Signup", func() {
+		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
 
 		req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer([]byte(testUser)))
 		resp := httptest.NewRecorder()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusConflict, resp.Code)
-		assert.Contains(t, resp.Body.String(), "User already registered.")
+		assert.Equal(suite.T(), http.StatusCreated, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "User registered successfully.")
 	})
 
-	t.Run("Invalid JSON", func(t *testing.T) {
+	suite.Run("User Already Registered", func() {
+		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).Return(mongo.NewSingleResultFromDocument(bson.D{{Key: "email", Value: "test@example.com"}, {Key: "username", Value: "testuser"}}, nil, nil)).Once()
+
+		req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer([]byte(testUser)))
+		resp := httptest.NewRecorder()
+
+		suite.router.ServeHTTP(resp, req)
+
+		assert.Equal(suite.T(), http.StatusConflict, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "User already registered.")
+	})
+
+	suite.Run("Invalid JSON", func() {
 		req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer([]byte(`{invalid json`)))
 		resp := httptest.NewRecorder()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.Contains(t, resp.Body.String(), "Invalid payload.")
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "Invalid payload.")
 	})
 }
 
-func TestLoginHandler(t *testing.T) {
-
+func (suite *AuthTestSuite) TestLoginHandler() {
 	testUser := dataTypes.User{
 		FirstName: "Test",
 		LastName:  "User",
 		Email:     "test@example.com",
-		Password:  getHash([]byte("password"))}
+		Password:  getHash([]byte("password")),
+	}
 
 	bsonUser, err := bson.Marshal(testUser)
 	if err != nil {
-		t.Fatalf("Error converting to BSON: %v", err)
+		suite.T().Fatalf("Error converting to BSON: %v", err)
 	}
 
-	t.Run("Valid Login", func(t *testing.T) {
+	suite.Run("Valid Login", func() {
 		loginRequest := `{"email":"test@example.com", "password":"password"}`
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(loginRequest)))
 		resp := httptest.NewRecorder()
 
-		mockDBWrapper.On("FindOne", mock.Anything, mongoDBClient, bson.M{"email": "test@example.com"}).Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
+		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).
+			Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.Contains(t, resp.Body.String(), "authToken")
+		assert.Equal(suite.T(), http.StatusOK, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "authToken")
 	})
 
-	t.Run("Invalid Login Payload", func(t *testing.T) {
+	suite.Run("Invalid Login Payload", func() {
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(`{invalid json`)))
 		resp := httptest.NewRecorder()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.Contains(t, resp.Body.String(), "Invalid payload.")
+		assert.Equal(suite.T(), http.StatusBadRequest, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "Invalid payload.")
 	})
 
-	t.Run("User Not Found", func(t *testing.T) {
+	suite.Run("User Not Found", func() {
 		loginRequest := `{"email":"notfound@example.com", "password":"fakepass"}`
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(loginRequest)))
 		resp := httptest.NewRecorder()
 
-		mockDBWrapper.On("FindOne", mock.Anything, mongoDBClient, bson.M{"email": "notfound@example.com"}).Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
+		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "notfound@example.com"}, mock.Anything).
+			Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusUnauthorized, resp.Code)
-		assert.Contains(t, resp.Body.String(), "Incorrect email or password.")
+		assert.Equal(suite.T(), http.StatusUnauthorized, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "Incorrect email or password.")
 	})
 
-	t.Run("Incorrect Password", func(t *testing.T) {
+	suite.Run("Incorrect Password", func() {
 		loginRequest := `{"email":"test@example.com", "password":"wrongpassword"}`
 		req, _ := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer([]byte(loginRequest)))
 		resp := httptest.NewRecorder()
 
-		mockDBWrapper.On("FindOne", mock.Anything, mongoDBClient, bson.M{"email": "test@example.com"}).Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
+		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).
+			Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
 
-		router.ServeHTTP(resp, req)
+		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusUnauthorized, resp.Code)
-		assert.Contains(t, resp.Body.String(), "Incorrect email or password.")
+		assert.Equal(suite.T(), http.StatusUnauthorized, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "Incorrect email or password.")
 	})
+}
+
+func TestAuthTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthTestSuite))
 }

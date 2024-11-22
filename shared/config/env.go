@@ -5,27 +5,20 @@ import (
 	"strconv"
 )
 
-// Returns an environment string variable or a default value if not found.
-func GetEnvironWithDefault(key string, defaultValue string) string {
-	value, present := os.LookupEnv(key)
-	if present {
+// GetEnvironWithDefault returns an environment variable as a string or a default value if not found.
+func GetEnvironWithDefault(key, defaultValue string) string {
+	if value, present := os.LookupEnv(key); present {
 		return value
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
-// Returns an environment int variable or a default value if not found.
+// GetEnvironIntWithDefault returns an environment variable as an int or a default value if not found.
+// If the value cannot be parsed to an int, the default value is returned.
 func GetEnvironIntWithDefault(key string, defaultValue int) int {
-	value, present := os.LookupEnv(key)
-	if present {
-		intValue, err := strconv.Atoi(value)
-		if err == nil {
-			return intValue
-		} else {
-			return defaultValue
-		}
-	} else {
-		return defaultValue
+	value := GetEnvironWithDefault(key, "")
+	if intValue, err := strconv.Atoi(value); err == nil {
+		return intValue
 	}
+	return defaultValue
 }

@@ -35,18 +35,22 @@ func (ld *LogData) UnmarshalJSON(data []byte) error {
 	// Unmarshal known fields.
 	err := json.Unmarshal(data, &aux)
 	if err != nil {
-		return err
+		return fmt.Errorf("error unmarshalling known fields: %v", err)
 	}
 
 	// Check if any mandatory field is empty (That means library bad behavior)
 	if ld.Level == "" || ld.Message == "" {
-		return fmt.Errorf("LogData struct cannot have empty fields")
+		return fmt.Errorf("LogData struct cannot have empty fields (Level and Message are mandatory)")
+	}
+
+	if ld.ExtraFields == nil {
+		ld.ExtraFields = make(map[string]interface{})
 	}
 
 	// Unmarshall all fields in 'ExtraFields' map.
 	err = json.Unmarshal(data, &aux.Alias.ExtraFields)
 	if err != nil {
-		return err
+		return fmt.Errorf("error unmarshalling extra fields: %v", err)
 	}
 
 	// Delete known fields from ExtraFields map to leave only unknown fields.
