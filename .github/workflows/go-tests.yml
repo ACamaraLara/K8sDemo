@@ -1,0 +1,46 @@
+name: Go Tests
+
+on:
+  pull_request:
+    branches:
+      - '**'  # All branches for pull requests.
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest 
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3 
+
+    - name: Set up Go
+      uses: actions/setup-go@v3 
+      with:
+        go-version: '1.23'
+
+    - name: Run unit tests for account-service
+      run: |
+        module="microservices/account-service"
+        echo "Running go mod tidy for module: ${module}"
+        cd ${module} && go mod tidy
+        echo "Running tests for module: ${module}"
+        go test -v ./...
+        cd -
+
+    - name: Run unit tests for api-gateway
+      run: |
+        module="microservices/api-gateway"
+        echo "Running go mod tidy for module: ${module}"
+        cd ${module} && go mod tidy
+        echo "Running tests for module: ${module}"
+        go test -v ./...
+        cd -
+
+    - name: Run unit tests for shared packages
+      run: |
+        module="shared/"
+        echo "Running go mod tidy for module: ${module}"
+        cd ${module} && go mod tidy
+        echo "Running tests for module: ${module}"
+        go test -v ./...
+        cd -
