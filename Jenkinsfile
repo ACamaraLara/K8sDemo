@@ -30,10 +30,33 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Tests passed successfully!'
+            script {
+                githubNotify(
+                    status: 'SUCCESS',
+                    description: 'Build completed successfully.',
+                    credentialsId: 'github-testoken',
+                    context: 'ci/build', 
+                    targetUrl: "http://cams-jenkins.duckdns.org:50000/job/K8sDemoUnitTests/${env.BUILD_NUMBER}", 
+                    repo: 'K8sDemo',
+                    account: 'ACamaraLara',  
+                    sha: env.GIT_COMMIT  // SHA del commit actual
+                )
+            }
         }
         failure {
-            echo 'Tests failed!'
+            script {
+                githubNotify(
+                    status: 'FAILURE',
+                    description: 'Build failed.',
+                    credentialsId: 'github-testoken',
+                    context: 'ci/build',
+                    targetUrl: "http://cams-jenkins.duckdns.org:50000/job/K8sDemoUnitTests/${env.BUILD_NUMBER}",
+                    repo: 'K8sDemo',
+                    account: 'ACamaraLara',
+                    sha: env.GIT_COMMIT
+                )
+            }
         }
     }
 }
+
