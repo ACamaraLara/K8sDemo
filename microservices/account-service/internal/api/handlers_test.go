@@ -1,14 +1,18 @@
-package restServer
+package api
 
 import (
+	"account-service/internal/account"
+	"account-service/internal/encryption"
+	"account-service/internal/model"
+
 	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/dataTypes"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -35,8 +39,8 @@ func (suite *AuthTestSuite) SetupTest() {
 	collections["USERS"] = suite.mockCollection
 
 	suite.mongoDB = &mongodb.MongoDB{Client: suite.mockClient, Collections: collections}
-	routes := InitRestRoutes(suite.mongoDB)
-	suite.router = restRouter.NewRouter(routes)
+	accCtrl := account.NewAccountController(suite.mongoDB)
+	suite.router = restRouter.NewRouter(SetAccountRoutes(accCtrl))
 }
 
 func (suite *AuthTestSuite) TestSignupHandler() {
@@ -47,7 +51,7 @@ func (suite *AuthTestSuite) TestSignupHandler() {
 		"password": "password"
 	}`
 
-	suite.mockCollection.On("InsertOne", mock.Anything, mock.AnythingOfType("dataTypes.User"), mock.Anything).Return(&mongo.InsertOneResult{}, nil)
+	suite.mockCollection.On("InsertOne", mock.Anything, mock.AnythingOfType("*model.User"), mock.Anything).Return(&mongo.InsertOneResult{}, nil)
 
 	suite.Run("Valid Signup", func() {
 		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
@@ -69,8 +73,8 @@ func (suite *AuthTestSuite) TestSignupHandler() {
 
 		suite.router.ServeHTTP(resp, req)
 
-		assert.Equal(suite.T(), http.StatusConflict, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "User already registered.")
+		assert.Equal(suite.T(), http.StatusInternalServerError, resp.Code)
+		assert.Contains(suite.T(), resp.Body.String(), "account already registered")
 	})
 
 	suite.Run("Invalid JSON", func() {
@@ -80,17 +84,18 @@ func (suite *AuthTestSuite) TestSignupHandler() {
 		suite.router.ServeHTTP(resp, req)
 
 		assert.Equal(suite.T(), http.StatusBadRequest, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "Invalid payload.")
+		assert.Contains(suite.T(), resp.Body.String(), "Invalid signup request payload.")
 	})
 }
 
 func (suite *AuthTestSuite) TestLoginHandler() {
-	testUser := dataTypes.User{
+	testUser := model.User{
 		FirstName: "Test",
 		LastName:  "User",
 		Email:     "test@example.com",
-		Password:  getHash([]byte("password")),
 	}
+	// Mock should return encrypted password to decrypt it and check hash.
+	testUser.Password, _ = encryption.GetHash([]byte("password"))
 
 	bsonUser, err := bson.Marshal(testUser)
 	if err != nil {
@@ -108,7 +113,6 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		suite.router.ServeHTTP(resp, req)
 
 		assert.Equal(suite.T(), http.StatusOK, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "authToken")
 	})
 
 	suite.Run("Invalid Login Payload", func() {
@@ -118,7 +122,7 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		suite.router.ServeHTTP(resp, req)
 
 		assert.Equal(suite.T(), http.StatusBadRequest, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "Invalid payload.")
+		assert.Contains(suite.T(), resp.Body.String(), "Invalid login request payload.")
 	})
 
 	suite.Run("User Not Found", func() {
@@ -132,7 +136,7 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		suite.router.ServeHTTP(resp, req)
 
 		assert.Equal(suite.T(), http.StatusUnauthorized, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "Incorrect email or password.")
+		assert.Contains(suite.T(), resp.Body.String(), "user not registered")
 	})
 
 	suite.Run("Incorrect Password", func() {
@@ -146,7 +150,7 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		suite.router.ServeHTTP(resp, req)
 
 		assert.Equal(suite.T(), http.StatusUnauthorized, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "Incorrect email or password.")
+		assert.Contains(suite.T(), resp.Body.String(), "incorrect password")
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+	"github.com/rs/zerolog/log"
 )
 
 const lokiPostPath string = "/api/prom/push"
@@ -14,7 +15,6 @@ const lokiPostPath string = "/api/prom/push"
 // Returns URL to post in Loki logging service.
 func getLokiPostUrl() string {
 	lokiBaseUrl := config.GetEnvironWithDefault("LOKI_URL", "http://loki:3100")
-	fmt.Println("Loki URL:", lokiBaseUrl)
 	return lokiBaseUrl + lokiPostPath
 }
 
@@ -23,7 +23,9 @@ func getLokiPostUrl() string {
 // @param logWritter I/O writer to handle multilevel writer.
 // It is used to store the logs and send them to the routine
 // that will publish them in Loki.
-func (log *Logger) StartLokiLogPublishRoutine() error {
+func (logger *Logger) StartLokiLogPublishRoutine() error {
+
+	log.Info().Msg("Starting Loki log publish routine")
 
 	// Declare url and http client to post logs to Loki db.
 	lokiPostURL := getLokiPostUrl()
@@ -32,7 +34,7 @@ func (log *Logger) StartLokiLogPublishRoutine() error {
 
 	// Infinite loop that listens to a LoqQueue channel for service logs.
 	go func() {
-		for log := range log.Buf.LogQueue {
+		for log := range logger.Buf.LogQueue {
 
 			// // Deserialize byte array in a LogData object.
 			var logData LogData

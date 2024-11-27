@@ -6,7 +6,6 @@ replace github.com/ACamaraLara/K8sBlockChainDemo/shared => ../../shared
 
 require (
 	github.com/ACamaraLara/K8sBlockChainDemo/shared v0.0.0-00010101000000-000000000000
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/rs/zerolog v1.33.0

@@ -1,8 +1,9 @@
 package main
 
 import (
+	"account-service/internal/account"
+	"account-service/internal/api"
 	"account-service/internal/inputParams"
-	"account-service/internal/restServer"
 	"context"
 	"net/http"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 )
 
 func main() {
+	log.Info().Msg("Starting account-service application")
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // This will allow us to cancel the context on app shutdown
 
@@ -35,7 +37,9 @@ func main() {
 
 	defer mongoDB.Client.Disconnect(ctx)
 
-	router := restRouter.NewRouter(restServer.InitRestRoutes(mongoDB))
+	accCtrl := account.NewAccountController(mongoDB)
+
+	router := restRouter.NewRouter(api.SetAccountRoutes(accCtrl))
 
 	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
 	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
