@@ -1,14 +1,11 @@
 package restServer
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/dataTypes"
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database"
 	"github.com/dgrijalva/jwt-go"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -17,7 +14,7 @@ import (
 
 var SECRET_KEY = []byte("k8ssecretkey")
 
-func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
+func SignupHandler(c *gin.Context, dbClient *database.DBManager) {
 	log.Info().Msg("Registering new user.")
 
 	var newUser dataTypes.User
@@ -28,19 +25,15 @@ func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
 	}
 
 	// Check if the user already exists by email or username
-	if exists, err := checkUserExists(mongoClient, c.Request.Context(), &newUser); err != nil {
-		log.Error().Msgf("Database error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error."})
-		return
-	} else if exists {
+	if err := dbClient.FindOne(c.Request.Context(), "USERS", nil,
+		map[string]interface{}{"email": newUser.Email}); err == nil {
 		log.Error().Msg("User already registered.")
 		c.JSON(http.StatusConflict, gin.H{"error": "User already registered."})
 		return
 	}
 
 	newUser.Password = getHash([]byte(newUser.Password))
-	_, err := mongoClient.Collections["USERS"].InsertOne(c.Request.Context(), newUser)
-	if err != nil {
+	if err := dbClient.InsertOne(c.Request.Context(), "USERS", newUser); err != nil {
 		log.Error().Msgf("Error inserting new user to database %v", err)
 		return
 	}
@@ -50,7 +43,7 @@ func SignupHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
 	log.Info().Msg("User registered successfully.")
 }
 
-func LoginHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
+func LoginHandler(c *gin.Context, dbClient *database.DBManager) {
 	log.Info().Msg("User login attempt.")
 
 	var loginRequest struct {
@@ -65,7 +58,8 @@ func LoginHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
 	}
 
 	var storedUser dataTypes.User
-	if err := findUserByEmail(mongoClient, c.Request.Context(), loginRequest.Email, &storedUser); err != nil {
+	if err := dbClient.FindOne(c.Request.Context(), "USERS", &storedUser,
+		map[string]interface{}{"email": loginRequest.Email}); err != nil {
 		log.Error().Msgf("User not found: %v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect email or password."})
 		return
@@ -90,6 +84,8 @@ func LoginHandler(c *gin.Context, mongoClient *mongodb.MongoDB) {
 	c.JSON(http.StatusOK, gin.H{"authToken": token})
 }
 
+// :ToDo: Create package to manage password encryption.
+
 func getHash(pwd []byte) string {
 	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.DefaultCost)
 	if err != nil {
@@ -98,29 +94,14 @@ func getHash(pwd []byte) string {
 	return string(hash)
 }
 
-// Helper functions are going to be moved to different package to manage all all accounts operations.
-func checkUserExists(mongoClient *mongodb.MongoDB, ctx context.Context, user *dataTypes.User) (bool, error) {
-	filter := bson.M{"email": user.Email}
-	var existingUser dataTypes.User
-	err := mongoClient.Collections["USERS"].FindOne(ctx, filter).Decode(&existingUser)
-	if err != nil && err != mongo.ErrNoDocuments && err != mongo.ErrNilDocument {
-		return false, err
-	}
-	return (err != mongo.ErrNoDocuments && err != mongo.ErrNilDocument), nil
-}
-
-func findUserByEmail(mongoClient *mongodb.MongoDB, ctx context.Context, email string, user *dataTypes.User) error {
-	filter := bson.M{"email": email}
-	result := mongoClient.Collections["USERS"].FindOne(ctx, filter)
-	return result.Decode(user)
-}
-
 // checkPasswordHash verifies if the provided password matches the hashed password in the database
 func checkPasswordHash(password, hashedPassword string) bool {
 	// bcrypt.CompareHashAndPassword returns nil on a successful match
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
 }
+
+// :ToDo: Create package to manage jwt token.
 
 func generateJWTToken() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)

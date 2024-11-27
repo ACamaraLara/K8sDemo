@@ -5,10 +5,9 @@ import (
 	"account-service/internal/restServer"
 	"context"
 	"net/http"
-	"strconv"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 
 	"github.com/rs/zerolog/log"
@@ -26,21 +25,15 @@ func main() {
 		log.Error().Err(err).Msg("Error initializing Loki log routine:")
 		return
 	}
-
-	log.Info().Msg("Connecting to mongodb..." + inputParams.Mongo.GetURL())
-	mongoDB, err := mongodb.NewMongoDBClient(ctx, &inputParams.Mongo)
+	database, err := database.NewDatabase(ctx, inputParams.DBType, &inputParams.DBConf)
 	if err != nil {
 
 	}
+	/*:ToDo defer mongoDB.Client.Disconnect(ctx)*/
+	router := restRouter.NewRouter(restServer.InitRestRoutes(database))
 
-	defer mongoDB.Client.Disconnect(ctx)
-
-	router := restRouter.NewRouter(restServer.InitRestRoutes(mongoDB))
-
-	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
-	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
-
-	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
+	log.Info().Msg("Listening for HTTP requests on port " + inputParams.RESTPort)
+	log.Fatal().Msg(http.ListenAndServe(inputParams.RESTPort, router).Error())
 	log.Info().Msg("Exiting...")
 
 }

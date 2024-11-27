@@ -3,12 +3,12 @@ package restServer
 import (
 	"net/http"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 	"github.com/gin-gonic/gin"
 )
 
-func InitRestRoutes(mongoClient *mongodb.MongoDB) restRouter.Routes {
+func InitRestRoutes(mongoClient *database.DBManager) restRouter.Routes {
 
 	// In case of new routes, declare them here.
 	return restRouter.Routes{

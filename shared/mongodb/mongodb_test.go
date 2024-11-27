@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -44,7 +45,7 @@ func (suite *MongoTestSuite) TestSetupCollections() {
 	suite.mockClient.On("GetDBCollection", "testdb", "collection1").Return(suite.mockCollection)
 	suite.mockClient.On("GetDBCollection", "testdb", "collection2").Return(suite.mockCollection)
 
-	conf := &MongoConfig{
+	conf := &config.DBConfig{
 		Host:        "localhost",
 		Port:        "27017",
 		DbName:      "testdb",

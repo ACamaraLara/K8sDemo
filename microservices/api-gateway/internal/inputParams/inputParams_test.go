@@ -13,7 +13,7 @@ func TestSetInputParams_DefaultValues(t *testing.T) {
 
 	inputParams := SetInputParams()
 
-	assert.Equal(t, 8080, inputParams.RESTPort)
+	assert.Equal(t, "8080", inputParams.RESTPort)
 
 	assert.Equal(t, rabbitmq.DefaultRabbitHost, inputParams.Rabbit.Host)
 	assert.Equal(t, rabbitmq.DefaultRabbitPort, inputParams.Rabbit.Port)
