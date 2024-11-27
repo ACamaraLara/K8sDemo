@@ -1,15 +1,15 @@
-package restServer
+package api
 
 import (
+	"account-service/internal/account"
 	"testing"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 )
 
 // Creates a new router and checks that contains all expected routes
 func TestDeclareRouter(t *testing.T) {
-	routes := InitRestRoutes(&rabbitmq.RabbitMQClient{})
+	routes := SetAccountRoutes(&account.AccountController{})
 
 	router := restRouter.NewRouter(routes)
 

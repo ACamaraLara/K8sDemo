@@ -23,11 +23,17 @@ func NewRouter(routes Routes) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = io.Discard
 	router := gin.Default()
-	RegisterRoutes(router, routes)
+	// Status handler should be available in all services inside the cluster.
+	appendStatusHandler(routes)
+	registerRoutes(router, routes)
 	return router
 }
 
-func RegisterRoutes(router *gin.Engine, routes Routes) {
+func appendStatusHandler(routes Routes) Routes {
+	return append(routes, Route{Method: http.MethodGet, Pattern: "/status", Handler: statusHandler})
+}
+
+func registerRoutes(router *gin.Engine, routes Routes) {
 	for _, route := range routes {
 
 		//Add route to declared router.
@@ -53,7 +59,7 @@ func RegisterRoutes(router *gin.Engine, routes Routes) {
 }
 
 // This is the default status handler that will be used in every service.
-func StatusHandler(c *gin.Context) {
+func statusHandler(c *gin.Context) {
 	log.Info().Msg("Status endpoint hit")
 
 	if c.Request.Method != http.MethodGet {

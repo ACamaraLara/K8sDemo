@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
+	"api-gateway/internal/api"
 	"api-gateway/internal/inputParams"
-	"api-gateway/internal/restServer"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 
 	"github.com/rs/zerolog/log"
@@ -18,29 +16,18 @@ import (
 func main() {
 	// Read input parameters.
 	inputParams := inputParams.SetInputParams()
-	fmt.Println("Starting application")
+	log.Info().Msg("Starting api-gateway application")
 
 	// Init Logger with selected level.
 	logger := logger.InitServiceLogger(inputParams.Logger)
 
 	if err := logger.StartLokiLogPublishRoutine(); err != nil {
-		fmt.Println("Error initializing Loki log routine:", err)
-		return
+		log.Fatal().Err(err).Msg("Starting api-gateway application")
 	}
 
-	rbMQ, err := rabbitmq.NewRabbitMQClient(&inputParams.Rabbit)
-	if err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-
-	// Close connection before app ends.
-	defer rbMQ.Conn.Close()
-
-	if err := rbMQ.DeclareQueue("USERS", false, false, false, false); err != nil {
-		log.Fatal().Msg(err.Error())
-	}
-	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
-	router := restRouter.NewRouter(restServer.InitRestRoutes(rbMQ))
+	log.Info().Msg("Initializing api-gateway routes.")
+	router := restRouter.NewRouter(api.InitGatewayRoutes())
+	log.Info().Msg("Routes initialized.")
 
 	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
 	log.Info().Msg("Listening for HTTP requests on port " + listenPort)

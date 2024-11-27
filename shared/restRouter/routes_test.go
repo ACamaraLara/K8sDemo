@@ -17,11 +17,11 @@ func InitTestStatusHandlerRoute() Routes {
 		Route{
 			Method:  http.MethodGet,
 			Pattern: "/test",
-			Handler: StatusHandler,
+			Handler: statusHandler,
 		}, Route{
 			Method:  http.MethodPost,
 			Pattern: "/test",
-			Handler: StatusHandler,
+			Handler: statusHandler,
 		}, Route{
 			Method:  http.MethodPut,
 			Pattern: "/test",

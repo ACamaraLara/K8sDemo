@@ -1,11 +1,4 @@
-package dataTypes
-
-type ActionType string
-
-const (
-	Signup ActionType = "SignUp"
-	Login  ActionType = "Login"
-)
+package model
 
 type User struct {
 	FirstName string `json:"firstName" bson:"firstName"`

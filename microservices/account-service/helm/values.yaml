@@ -13,7 +13,7 @@ deployment:
   replicaCount: 1
   image:
     repository: camsagaz/account-service
-    version: v0.1.2
+    version: v0.1.1
     pullPolicy: Always
   env:
     rabbitHost: rabbitmq.messaging.svc.cluster.local
