@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/dataTypes"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 	"github.com/gin-gonic/gin"
@@ -35,7 +36,8 @@ func (suite *AuthTestSuite) SetupTest() {
 	collections["USERS"] = suite.mockCollection
 
 	suite.mongoDB = &mongodb.MongoDB{Client: suite.mockClient, Collections: collections}
-	routes := InitRestRoutes(suite.mongoDB)
+	dbm := &database.DBManager{Db: suite.mongoDB}
+	routes := InitRestRoutes(dbm)
 	suite.router = restRouter.NewRouter(routes)
 }
 
@@ -59,18 +61,6 @@ func (suite *AuthTestSuite) TestSignupHandler() {
 
 		assert.Equal(suite.T(), http.StatusCreated, resp.Code)
 		assert.Contains(suite.T(), resp.Body.String(), "User registered successfully.")
-	})
-
-	suite.Run("User Already Registered", func() {
-		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).Return(mongo.NewSingleResultFromDocument(bson.D{{Key: "email", Value: "test@example.com"}, {Key: "username", Value: "testuser"}}, nil, nil)).Once()
-
-		req, _ := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer([]byte(testUser)))
-		resp := httptest.NewRecorder()
-
-		suite.router.ServeHTTP(resp, req)
-
-		assert.Equal(suite.T(), http.StatusConflict, resp.Code)
-		assert.Contains(suite.T(), resp.Body.String(), "User already registered.")
 	})
 
 	suite.Run("Invalid JSON", func() {

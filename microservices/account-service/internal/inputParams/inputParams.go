@@ -3,17 +3,18 @@ package inputParams
 import (
 	"flag"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database/config"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/rabbitmq"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/utils"
 )
 
 type InputParams struct {
-	RESTPort int
+	RESTPort string
+	DBType   string
 	Logger   logger.LoggerConfig
 	Rabbit   rabbitmq.RabbitConfig
-	Mongo    mongodb.MongoConfig
+	DBConf   config.DBConfig
 }
 
 // SetInputParams returns an object that stores service config parameters.
@@ -21,11 +22,13 @@ type InputParams struct {
 func SetInputParams() *InputParams {
 	var inputParams InputParams
 
-	flag.IntVar(&inputParams.RESTPort, "restPort",
-		config.GetEnvironIntWithDefault("REST_PORT", 80), "RabbitMQ broker port (RABBITMQ__PORT).")
+	flag.StringVar(&inputParams.RESTPort, "restPort",
+		utils.GetEnvironWithDefault("REST_PORT", "80"), "Rest listening port (REST_PORT).")
+	flag.StringVar(&inputParams.DBType, "db-type",
+		utils.GetEnvironWithDefault("dbType", "mongo"), "Type of database that will be used (DB_TYPE).")
 	logger.AddFlagsParams(&inputParams.Logger)
 	inputParams.Rabbit.AddFlagsParams()
-	inputParams.Mongo.AddFlagsParams()
+	inputParams.DBConf.AddFlagsParams()
 
 	return &inputParams
 }

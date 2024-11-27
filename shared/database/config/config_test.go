@@ -1,4 +1,4 @@
-package mongodb
+package config
 
 import (
 	"os"
@@ -9,20 +9,17 @@ import (
 
 func TestAddFlagsParams(t *testing.T) {
 	// Setup environment variables for testing
-	os.Setenv("MONGODB_HOST", "testhost")
-	os.Setenv("MONGODB_PORT", "27018")
-	os.Setenv("MONGODB_DATABASE", "testdb")
-	os.Setenv("MONGODB_USER", "testuser")
-	os.Setenv("MONGODB_PASSWD", "testpassword")
-	os.Setenv("MONGODB_COLLECTIONS", "col1,col2")
+	os.Setenv("DB_HOST", "testhost")
+	os.Setenv("DB_PORT", "27018")
+	os.Setenv("DB_DATABASE", "testdb")
+	os.Setenv("DB_USER", "testuser")
+	os.Setenv("DB_PASSWD", "testpassword")
+	os.Setenv("DB_TABLES", "col1,col2")
 
-	// Create MongoConfig instance
-	cfg := &MongoConfig{}
+	cfg := &DBConfig{}
 
-	// Call the function to set flags and load environment variables
 	cfg.AddFlagsParams()
 
-	// Ensure the fields are correctly set from environment variables
 	assert.Equal(t, "testhost", cfg.Host)
 	assert.Equal(t, "27018", cfg.Port)
 	assert.Equal(t, "testdb", cfg.DbName)
@@ -30,20 +27,18 @@ func TestAddFlagsParams(t *testing.T) {
 	assert.Equal(t, "testpassword", cfg.Passwd)
 	assert.Equal(t, []string{"col1", "col2"}, cfg.Collections)
 
-	// Cleanup environment variables
-	os.Unsetenv("MONGODB_HOST")
-	os.Unsetenv("MONGODB_PORT")
-	os.Unsetenv("MONGODB_DATABASE")
-	os.Unsetenv("MONGODB_USER")
-	os.Unsetenv("MONGODB_PASSWD")
-	os.Unsetenv("MONGODB_COLLECTIONS")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+	os.Unsetenv("DB_DATABASE")
+	os.Unsetenv("DB_USER")
+	os.Unsetenv("DB_PASSWD")
+	os.Unsetenv("DB_TABLES")
 }
 
 func TestGetURL(t *testing.T) {
-	// Define a struct to hold test case data
 	type testCase struct {
 		name        string
-		config      *MongoConfig
+		config      *DBConfig
 		expectedURL string
 	}
 
@@ -51,7 +46,7 @@ func TestGetURL(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "WithoutUserAndPasswd",
-			config: &MongoConfig{
+			config: &DBConfig{
 				Host:   DefaultMongoDBHost,
 				Port:   DefaultMongoDBPort,
 				DbName: DefaultMongoDBName,
@@ -60,7 +55,7 @@ func TestGetURL(t *testing.T) {
 		},
 		{
 			name: "WithUserAndPasswd",
-			config: &MongoConfig{
+			config: &DBConfig{
 				Host:   DefaultMongoDBHost,
 				Port:   DefaultMongoDBPort,
 				DbName: DefaultMongoDBName,

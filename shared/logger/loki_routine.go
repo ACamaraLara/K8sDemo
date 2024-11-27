@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/utils"
 )
 
 const lokiPostPath string = "/api/prom/push"
 
 // Returns URL to post in Loki logging service.
 func getLokiPostUrl() string {
-	lokiBaseUrl := config.GetEnvironWithDefault("LOKI_URL", "http://loki:3100")
+	lokiBaseUrl := utils.GetEnvironWithDefault("LOKI_URL", "http://loki:3100")
 	fmt.Println("Loki URL:", lokiBaseUrl)
 	return lokiBaseUrl + lokiPostPath
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"api-gateway/internal/inputParams"
 	"api-gateway/internal/restServer"
@@ -42,9 +41,7 @@ func main() {
 	// Creates a muxer/router and adds routes to it (POSTS, GETS...).
 	router := restRouter.NewRouter(restServer.InitRestRoutes(rbMQ))
 
-	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
-	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
-
+	log.Info().Msg("Listening for HTTP requests on port " + inputParams.RESTPort)
 	// Starts listening for HTTP requests.
-	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
+	log.Fatal().Msg(http.ListenAndServe(inputParams.RESTPort, router).Error())
 }

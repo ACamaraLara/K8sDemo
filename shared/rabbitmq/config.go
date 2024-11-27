@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"flag"
 
-	"github.com/ACamaraLara/K8sBlockChainDemo/shared/config"
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/utils"
 )
 
 const (
@@ -24,10 +24,10 @@ type RabbitConfig struct {
 // Init RabbitConfig structure with environment variables or default variable.
 // If an app input param is received while starting the application, this param will be used
 func (cfg *RabbitConfig) AddFlagsParams() {
-	flag.StringVar(&cfg.Host, "rabbit-host", config.GetEnvironWithDefault("RABBITMQ_HOST", DefaultRabbitHost), "RabbitMQ broker address (RABBITMQ_HOST).")
-	flag.StringVar(&cfg.Port, "rabbit-port", config.GetEnvironWithDefault("RABBITMQ__PORT", DefaultRabbitPort), "RabbitMQ broker port (RABBITMQ__PORT).")
-	flag.StringVar(&cfg.User, "rabbit-user", config.GetEnvironWithDefault("USERNAME", DefaultRabbitUser), "User to connect to RabbitMQ broker (RABBITMQ_USER).")
-	flag.StringVar(&cfg.Passwd, "rabbit-passwd", config.GetEnvironWithDefault("PASSWORD", DefaultRabbitPass), "RabbitMQ password (RABBITMQ_PASSWD).")
+	flag.StringVar(&cfg.Host, "rabbit-host", utils.GetEnvironWithDefault("RABBITMQ_HOST", DefaultRabbitHost), "RabbitMQ broker address (RABBITMQ_HOST).")
+	flag.StringVar(&cfg.Port, "rabbit-port", utils.GetEnvironWithDefault("RABBITMQ__PORT", DefaultRabbitPort), "RabbitMQ broker port (RABBITMQ__PORT).")
+	flag.StringVar(&cfg.User, "rabbit-user", utils.GetEnvironWithDefault("USERNAME", DefaultRabbitUser), "User to connect to RabbitMQ broker (RABBITMQ_USER).")
+	flag.StringVar(&cfg.Passwd, "rabbit-passwd", utils.GetEnvironWithDefault("PASSWORD", DefaultRabbitPass), "RabbitMQ password (RABBITMQ_PASSWD).")
 }
 
 // Returns a url with the necessary format to connect to RabbitMQ broker.

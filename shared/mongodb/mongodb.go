@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/database/config"
 	"github.com/rs/zerolog/log"
 )
 
 type MongoDB struct {
-	Conf        *MongoConfig
+	Conf        *config.DBConfig
 	Client      Client
 	Collections map[string]Collection
 }
 
-func NewMongoDBClient(ctx context.Context, conf *MongoConfig) (*MongoDB, error) {
-	log.Info().Msg("Initializing MongoDB client...")
+func NewMongoDBClient(ctx context.Context, conf *config.DBConfig) (*MongoDB, error) {
+	log.Info().Msg("Connecting to mongodb..." + conf.GetURL())
 	client, err := createMongoClient(ctx, conf)
 	if err != nil {
 		return nil, err
@@ -37,7 +38,7 @@ func NewMongoDBClient(ctx context.Context, conf *MongoConfig) (*MongoDB, error) 
 	return mongoDB, nil
 }
 
-func createMongoClient(ctx context.Context, conf *MongoConfig) (Client, error) {
+func createMongoClient(ctx context.Context, conf *config.DBConfig) (Client, error) {
 	client, err := NewClient(ctx, conf.GetURL())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to initialize MongoDB client")
@@ -57,7 +58,7 @@ func checkConnection(ctx context.Context, client Client) error {
 	return nil
 }
 
-func setupCollections(mongoDB *MongoDB, client Client, conf *MongoConfig) {
+func setupCollections(mongoDB *MongoDB, client Client, conf *config.DBConfig) {
 	log.Info().Msg("Setting up collections...")
 
 	for _, collectionName := range conf.Collections {
@@ -67,4 +68,17 @@ func setupCollections(mongoDB *MongoDB, client Client, conf *MongoConfig) {
 	}
 
 	log.Info().Msgf("Initialized %d collections", len(mongoDB.Collections))
+}
+
+// Implementation of database interface functions.
+
+func (mdb *MongoDB) InsertOne(ctx context.Context, tableName string, document interface{}) error {
+	// Don't use the InsertOneResult value because inserted object will already have the _id value set.
+	_, err := mdb.Collections[tableName].InsertOne(ctx, document)
+	return err
+}
+
+func (mdb *MongoDB) FindOne(ctx context.Context, tableName string, document interface{}, filters ...interface{}) error {
+	// Process filters before perform the query to Mongodb.
+	return mdb.Collections[tableName].FindOne(ctx, processFilters(filters...)).Decode(document)
 }
