@@ -4,12 +4,14 @@ import (
 	"account-service/internal/account"
 	"account-service/internal/encryption"
 	"account-service/internal/model"
+	"time"
 
 	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/jwtManager"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 
@@ -40,7 +42,13 @@ func (suite *AuthTestSuite) SetupTest() {
 
 	suite.mongoDB = &mongodb.MongoDB{Client: suite.mockClient, Collections: collections}
 	accCtrl := account.NewAccountController(suite.mongoDB)
-	suite.router = restRouter.NewRouter(SetAccountRoutes(accCtrl))
+	jwtConfig := &jwtManager.Config{
+		SecretKey:         "test-secret",
+		AccessTokenExpiry: 1 * time.Hour,
+		Issuer:            "test-issuer",
+	}
+	jwtMgr, _ := jwtManager.NewManager(jwtConfig)
+	suite.router = restRouter.NewRouter(SetAccountRoutes(accCtrl, jwtMgr))
 }
 
 func (suite *AuthTestSuite) TestSignupHandler() {

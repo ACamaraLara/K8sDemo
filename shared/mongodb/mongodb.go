@@ -14,7 +14,7 @@ type MongoDB struct {
 }
 
 func NewMongoDBClient(ctx context.Context, conf *MongoConfig) (*MongoDB, error) {
-	log.Info().Msg("Initializing MongoDB client...")
+	log.Info().Msg("Connecting to mongodb..." + conf.GetURL())
 	client, err := createMongoClient(ctx, conf)
 	if err != nil {
 		return nil, err

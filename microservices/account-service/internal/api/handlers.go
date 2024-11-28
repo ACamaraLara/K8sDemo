@@ -6,6 +6,8 @@ import (
 	"account-service/internal/account"
 	"account-service/internal/model"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/jwtManager"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -30,7 +32,7 @@ func SignupHandler(c *gin.Context, accountService *account.AccountController) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully."})
 }
 
-func LoginHandler(c *gin.Context, accountService *account.AccountController) {
+func LoginHandler(c *gin.Context, accountService *account.AccountController, jwtMgr *jwtManager.Manager) {
 	var loginRequest struct {
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
@@ -43,13 +45,22 @@ func LoginHandler(c *gin.Context, accountService *account.AccountController) {
 	}
 
 	log.Info().Msgf("Logging user %s", loginRequest.Email)
-
-	if err := accountService.Login(c, loginRequest.Email, loginRequest.Password); err != nil {
+	user, err := accountService.Login(c, loginRequest.Email, loginRequest.Password)
+	if err != nil {
 		log.Error().Msgf("Error logging in user %+v", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
+	token, err := jwtMgr.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
 	log.Info().Msgf("User loged in successfully.")
-	c.JSON(http.StatusOK, gin.H{"message": "User logged successfully!"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User logged in successfully!",
+		"token":   token,
+	})
 }

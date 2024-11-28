@@ -97,9 +97,10 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		// Mock the behavior of findUserByEmail (returns a user)
 		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).
 			Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
-		err := suite.accountCtrl.Login(context.Background(), testUser.Email, "password")
+		user, err := suite.accountCtrl.Login(context.Background(), testUser.Email, "password")
 
 		suite.NoError(err)
+		suite.Equal(user, &testUser)
 		suite.mockCollection.AssertExpectations(suite.T())
 	})
 
@@ -107,7 +108,7 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 		// Mock the behavior of findUserByEmail (returns a user)
 		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).
 			Return(mongo.NewSingleResultFromDocument(nil, nil, nil)).Once()
-		err := suite.accountCtrl.Login(context.Background(), testUser.Email, "password")
+		_, err := suite.accountCtrl.Login(context.Background(), testUser.Email, "password")
 
 		suite.Error(err)
 		suite.Equal(err.Error(), "user not registered")
@@ -117,7 +118,7 @@ func (suite *AuthTestSuite) TestLoginHandler() {
 	suite.Run("Incorrect password", func() {
 		suite.mockCollection.On("FindOne", mock.Anything, bson.M{"email": "test@example.com"}, mock.Anything).
 			Return(mongo.NewSingleResultFromDocument(bsonUser, nil, nil)).Once()
-		err := suite.accountCtrl.Login(context.Background(), testUser.Email, "wrongPassword") // Set wrong password.
+		_, err := suite.accountCtrl.Login(context.Background(), testUser.Email, "wrongPassword") // Set wrong password.
 
 		suite.Error(err)
 		suite.Contains(err.Error(), "incorrect password")

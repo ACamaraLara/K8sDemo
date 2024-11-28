@@ -6,8 +6,8 @@ import (
 	"account-service/internal/inputParams"
 	"context"
 	"net/http"
-	"strconv"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/jwtManager"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/logger"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/mongodb"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
@@ -25,26 +25,27 @@ func main() {
 	logger := logger.InitServiceLogger(inputParams.Logger)
 
 	if err := logger.StartLokiLogPublishRoutine(); err != nil {
-		log.Error().Err(err).Msg("Error initializing Loki log routine:")
-		return
+		log.Fatal().Err(err).Msg("Error initializing Loki log routine.")
 	}
 
-	log.Info().Msg("Connecting to mongodb..." + inputParams.Mongo.GetURL())
 	mongoDB, err := mongodb.NewMongoDBClient(ctx, &inputParams.Mongo)
 	if err != nil {
-
+		log.Fatal().Err(err).Msg("Error initializing MongoDB client.")
 	}
 
 	defer mongoDB.Client.Disconnect(ctx)
 
 	accCtrl := account.NewAccountController(mongoDB)
+	jwtMgr, err := jwtManager.NewManager(&inputParams.JWT)
+	if err != nil {
+		log.Fatal().Msgf("Error creating JWT manager object. %+v", err)
+	}
 
-	router := restRouter.NewRouter(api.SetAccountRoutes(accCtrl))
+	router := restRouter.NewRouter(api.SetAccountRoutes(accCtrl, jwtMgr))
 
-	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
-	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
+	log.Info().Msg("Listening for HTTP requests on port " + inputParams.RESTPort)
 
-	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
+	log.Fatal().Msg(http.ListenAndServe(inputParams.RESTPort, router).Error())
 	log.Info().Msg("Exiting...")
 
 }

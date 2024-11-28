@@ -36,3 +36,5 @@ spec:
                   key: password
             - name: RABBITMQ_HOST
               value: {{ .Values.deployment.env.rabbitHost }}
+            - name: JWT_SECRET_KEY
+              value: "SecretK8sDemoProject" #Proof of concept. Use secret manager instead.

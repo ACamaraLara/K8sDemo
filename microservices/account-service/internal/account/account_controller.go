@@ -45,18 +45,18 @@ func (s *AccountController) Signup(ctx context.Context, user *model.User) error 
 	return err
 }
 
-func (s *AccountController) Login(ctx context.Context, email, password string) error {
+func (s *AccountController) Login(ctx context.Context, email, password string) (*model.User, error) {
 	var storedUser model.User
 	exist, err := s.findUser(ctx, email, &storedUser)
 	if err != nil {
-		return err
+		return nil, err
 	} else if !exist {
-		return errors.New("user not registered")
+		return nil, errors.New("user not registered")
 	}
 	if !encryption.CheckPasswordHash(password, storedUser.Password) {
-		return errors.New("incorrect password")
+		return nil, errors.New("incorrect password")
 	}
-	return nil
+	return &storedUser, nil
 }
 
 func (s *AccountController) findUser(ctx context.Context, email string, user *model.User) (bool, error) {

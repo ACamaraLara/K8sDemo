@@ -9,7 +9,7 @@ import (
 )
 
 type InputParams struct {
-	RESTPort int
+	RESTPort string
 	Logger   logger.LoggerConfig
 	Rabbit   rabbitmq.RabbitConfig
 }
@@ -20,8 +20,9 @@ func SetInputParams() *InputParams {
 
 	var inputParams InputParams
 
-	flag.IntVar(&inputParams.RESTPort, "restPort",
-		config.GetEnvironIntWithDefault("RABBITMQ__PORT", 8080), "RabbitMQ broker port (RABBITMQ__PORT).")
+	flag.StringVar(&inputParams.RESTPort, "restPort",
+		config.GetEnvironWithDefault("REST_PORT", "8080"), "Port to listen http requests (REST_PORT).")
+	inputParams.RESTPort = ":" + inputParams.RESTPort
 	logger.AddFlagsParams(&inputParams.Logger)
 	inputParams.Rabbit.AddFlagsParams()
 
