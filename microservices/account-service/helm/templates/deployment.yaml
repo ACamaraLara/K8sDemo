@@ -42,3 +42,5 @@ spec:
               value: {{ .Values.deployment.env.mongoDatabase }}
             - name: MONGODB_COLLECTION
               value: {{ .Values.deployment.env.mongoCollection }}
+            - name: JWT_SECRET_KEY
+              value: "SecretK8sDemoProject" #Proof of concept. Use secret manager instead.

@@ -4,11 +4,12 @@ import (
 	"account-service/internal/account"
 	"net/http"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/jwtManager"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 	"github.com/gin-gonic/gin"
 )
 
-func SetAccountRoutes(accController *account.AccountController) restRouter.Routes {
+func SetAccountRoutes(accController *account.AccountController, jwtMgr *jwtManager.Manager) restRouter.Routes {
 	return restRouter.Routes{
 		restRouter.Route{
 			Method:  http.MethodPost,
@@ -21,7 +22,7 @@ func SetAccountRoutes(accController *account.AccountController) restRouter.Route
 			Method:  http.MethodPost,
 			Pattern: "/login",
 			Handler: func(c *gin.Context) {
-				LoginHandler(c, accController)
+				LoginHandler(c, accController, jwtMgr)
 			},
 		},
 	}

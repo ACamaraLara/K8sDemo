@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"strconv"
 
 	"api-gateway/internal/api"
 	"api-gateway/internal/inputParams"
@@ -29,9 +28,8 @@ func main() {
 	router := restRouter.NewRouter(api.InitGatewayRoutes())
 	log.Info().Msg("Routes initialized.")
 
-	listenPort := ":" + strconv.Itoa(inputParams.RESTPort)
-	log.Info().Msg("Listening for HTTP requests on port " + listenPort)
+	log.Info().Msg("Listening for HTTP requests on port " + inputParams.RESTPort)
 
 	// Starts listening for HTTP requests.
-	log.Fatal().Msg(http.ListenAndServe(listenPort, router).Error())
+	log.Fatal().Msg(http.ListenAndServe(inputParams.RESTPort, router).Error())
 }

@@ -4,12 +4,13 @@ import (
 	"account-service/internal/account"
 	"testing"
 
+	"github.com/ACamaraLara/K8sBlockChainDemo/shared/jwtManager"
 	"github.com/ACamaraLara/K8sBlockChainDemo/shared/restRouter"
 )
 
 // Creates a new router and checks that contains all expected routes
 func TestDeclareRouter(t *testing.T) {
-	routes := SetAccountRoutes(&account.AccountController{})
+	routes := SetAccountRoutes(&account.AccountController{}, &jwtManager.Manager{})
 
 	router := restRouter.NewRouter(routes)
 

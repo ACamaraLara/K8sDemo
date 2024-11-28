@@ -16,7 +16,7 @@ func TestSetInputParams_DefaultValues(t *testing.T) {
 	inputParams := SetInputParams()
 	fmt.Printf("input params = %+v", inputParams)
 
-	assert.Equal(t, 80, inputParams.RESTPort)
+	assert.Equal(t, ":80", inputParams.RESTPort)
 
 	assert.Equal(t, rabbitmq.DefaultRabbitHost, inputParams.Rabbit.Host)
 	assert.Equal(t, rabbitmq.DefaultRabbitPort, inputParams.Rabbit.Port)

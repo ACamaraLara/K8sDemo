@@ -11,9 +11,10 @@ import (
 // Struct that stores information of a single
 // route for current service.
 type Route struct {
-	Method  string
-	Pattern string
-	Handler gin.HandlerFunc
+	Method     string
+	Pattern    string
+	Handler    gin.HandlerFunc
+	Middleware []gin.HandlerFunc // Used to conn more than one handler.
 }
 
 type Routes []Route
@@ -35,23 +36,24 @@ func appendStatusHandler(routes Routes) Routes {
 
 func registerRoutes(router *gin.Engine, routes Routes) {
 	for _, route := range routes {
+		handler := append(route.Middleware, route.Handler)
 
 		//Add route to declared router.
 		switch route.Method {
 		case http.MethodGet:
-			router.GET(route.Pattern, route.Handler)
+			router.GET(route.Pattern, handler...)
 		case http.MethodPost:
-			router.POST(route.Pattern, route.Handler)
+			router.POST(route.Pattern, handler...)
 		case http.MethodPut:
-			router.PUT(route.Pattern, route.Handler)
+			router.PUT(route.Pattern, handler...)
 		case http.MethodPatch:
-			router.PATCH(route.Pattern, route.Handler)
+			router.PATCH(route.Pattern, handler...)
 		case http.MethodDelete:
-			router.DELETE(route.Pattern, route.Handler)
+			router.DELETE(route.Pattern, handler...)
 		case http.MethodHead:
-			router.HEAD(route.Pattern, route.Handler)
+			router.HEAD(route.Pattern, handler...)
 		case http.MethodOptions:
-			router.OPTIONS(route.Pattern, route.Handler)
+			router.OPTIONS(route.Pattern, handler...)
 		default:
 			log.Warn().Msg("Invalid HTTP method specified: " + route.Method)
 		}
